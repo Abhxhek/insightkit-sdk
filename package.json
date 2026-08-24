@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.0",
+    "@types/node": "^24.13.3",
     "dependency-cruiser": "^17.0.0",
     "typescript": "^5.9.3",
     "vitest": "^3.2.4"

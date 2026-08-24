@@ -1,6 +1,7 @@
 export type DenyCode =
   | 'E_PARSE'
   | 'E_EMPTY'
+  | 'E_NUL_BYTE'
   | 'E_MULTI_STATEMENT'
   | 'E_NOT_SELECT'
   | 'E_NODE_NOT_ALLOWED'
@@ -27,6 +28,4 @@ export type Verdict =
   | { readonly ok: true; readonly sql: string; readonly tables: readonly TableRef[] }
   | { readonly ok: false; readonly code: DenyCode; readonly detail: string };
 
-export interface Guard {
-  (sql: string, policy?: Policy): Verdict;
-}
+export type Guard = (sql: string, policy?: Policy) => Verdict;

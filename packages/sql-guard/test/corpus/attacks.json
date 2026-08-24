@@ -278,5 +278,15 @@
     "id": "comment-hidden-dml",
     "sql": "SELECT 1 /* harmless */; DELETE FROM users",
     "why": "comment does not neutralise the stacked statement"
+  },
+  {
+    "id": "nul-truncation",
+    "sql": "SELECT 1\u0000; DROP TABLE users",
+    "why": "NUL truncates the string inside the C parser, so the tail is never inspected"
+  },
+  {
+    "id": "nul-bare",
+    "sql": "SELECT\u0000 1",
+    "why": "NUL anywhere in the input is refused"
   }
 ]

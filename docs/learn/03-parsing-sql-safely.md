@@ -97,6 +97,26 @@ So there is a third layer: an allowlist of function names. About 120 entries cov
 
 Schema qualification does not launder anything: `pg_catalog.pg_read_file` resolves to the same last element, and any schema other than `pg_catalog` is refused outright.
 
+## Finding 5: the parser is written in C, and C strings end at NUL
+
+Found by accident. A test file picked up a stray NUL byte, which surfaced two separate problems.
+
+The first was tooling: **git treats a file containing a NUL as binary**. No diff, no line-by-line review. For the security kernel and its test suite — files specifically gated behind CODEOWNERS review — that silently defeats the review requirement. There is now a test asserting no source file contains a raw NUL.
+
+The second was behavioural:
+
+    guard('SELECT 1' + NUL + '; DROP TABLE users')  ->  ALLOW, sql: "SELECT 1"
+
+`libpg_query` is Postgres C code compiled to WebAssembly, so the string ends at the NUL. The parser genuinely never sees the tail. It reports one statement, and it is right about the statement it was given.
+
+Is that exploitable? **Not as designed** — and the reason is worth stating precisely. The verdict carries SQL re-emitted from the validated tree, which is `SELECT 1`. The `DROP` is not in the AST, so it cannot be in the output. A caller executing `v.sql` is safe.
+
+That is the deparse-our-own-tree rule doing exactly the job it exists for, on an attack nobody anticipated.
+
+But it now denies anyway, with `E_NUL_BYTE`. Two reasons. The guard was accepting an input whose meaning differed from what it validated, which is precisely the thing a guard should refuse to do quietly. And its safety depended entirely on every present and future caller using `v.sql` rather than the original string — a one-line refactor away from being wrong. Defences that hold only while everyone downstream stays disciplined are not defences.
+
+The general lesson: **know what your dependencies are written in.** A WebAssembly-compiled C parser inherits C's string semantics, and that leaks through an API that otherwise looks like ordinary JavaScript.
+
 ## The three layers
 
 Each catches something the others structurally cannot:

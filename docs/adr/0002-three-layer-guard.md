@@ -28,6 +28,7 @@ Four checks, each catching a class the others structurally cannot:
 | Node tag allowlist | writes anywhere in the tree | `WITH x AS (DELETE ...) SELECT * FROM x` |
 | Field allowlist per tag | untagged inlined structs | `SELECT * INTO exfil FROM users` |
 | Function name allowlist | legal structure, hostile call | `SELECT pg_read_file('/etc/passwd')` |
+| Input byte check | NUL truncation inside the C parser | `SELECT 1<NUL>; DROP TABLE users` |
 
 ## Consequences
 
