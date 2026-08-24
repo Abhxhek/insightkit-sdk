@@ -1,0 +1,22 @@
+{
+  "name": "@insightkit/sql-guard",
+  "version": "0.0.0",
+  "description": "The InsightKit security kernel: decides whether a SQL string is a safe read-only SELECT. Parses, validates against an allowlist, and re-emits the SQL from its own AST. Cannot connect to a database.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "pgsql-parser": "18.2.6"
+  }
+}

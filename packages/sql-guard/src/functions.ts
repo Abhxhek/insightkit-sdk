@@ -1,0 +1,33 @@
+export const ALLOWED_FUNCTIONS: ReadonlySet<string> = new Set([
+  'count', 'sum', 'avg', 'min', 'max', 'array_agg', 'string_agg',
+  'bool_and', 'bool_or', 'every', 'stddev', 'stddev_pop', 'stddev_samp',
+  'variance', 'var_pop', 'var_samp', 'corr', 'percentile_cont', 'percentile_disc', 'mode',
+
+  'row_number', 'rank', 'dense_rank', 'percent_rank', 'cume_dist',
+  'ntile', 'lag', 'lead', 'first_value', 'last_value', 'nth_value',
+
+  'date_trunc', 'date_part', 'date_bin', 'extract', 'age', 'now',
+  'current_date', 'current_time', 'current_timestamp', 'localtime', 'localtimestamp',
+  'to_char', 'to_date', 'to_timestamp', 'to_number',
+  'make_date', 'make_time', 'make_timestamp', 'make_interval', 'justify_interval',
+  'generate_series', 'timezone',
+
+  'lower', 'upper', 'initcap', 'trim', 'btrim', 'ltrim', 'rtrim',
+  'length', 'char_length', 'character_length', 'octet_length',
+  'substr', 'substring', 'left', 'right', 'lpad', 'rpad',
+  'concat', 'concat_ws', 'split_part', 'replace', 'reverse', 'repeat',
+  'position', 'strpos', 'starts_with', 'md5', 'encode',
+  'regexp_replace', 'regexp_match', 'regexp_matches', 'regexp_split_to_array',
+
+  'abs', 'round', 'ceil', 'ceiling', 'floor', 'trunc', 'sign',
+  'power', 'sqrt', 'cbrt', 'exp', 'ln', 'log', 'log10', 'mod', 'div',
+  'greatest', 'least', 'width_bucket',
+
+  'coalesce', 'nullif', 'cast',
+
+  'array_length', 'array_position', 'array_to_string', 'cardinality', 'unnest',
+  'jsonb_array_length', 'jsonb_each_text', 'jsonb_object_keys',
+  'jsonb_extract_path_text', 'json_extract_path_text', 'jsonb_typeof', 'to_jsonb',
+]);
+
+export const ALLOWED_FUNCTION_SCHEMAS: ReadonlySet<string> = new Set(['pg_catalog']);

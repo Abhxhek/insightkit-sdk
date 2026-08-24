@@ -1,0 +1,13 @@
+# Learning track
+
+Written alongside the code, not after it. Each chapter explains what we built, why that shape and not another, and what we got wrong on the way.
+
+Chapters appear as the corresponding code lands. There is deliberately no outline for parts that do not exist yet.
+
+| # | Chapter | Covers |
+|---|---|---|
+| 01 | [What an SDK actually is](./01-sdk-anatomy.md) | why library code differs from app code, semver as a contract, `exports`, dependency footprint, async-init/sync-use, errors as values |
+| 02 | [Package boundaries as security boundaries](./02-boundaries.md) | monorepo vs polyrepo, pnpm strict resolution, the dependency rules and how they are enforced |
+| 03 | [Deciding whether SQL is safe](./03-parsing-sql-safely.md) | why regex loses, real grammar parsing, allowlist vs denylist, the three layers, deparse round-trip |
+
+Decisions with a real alternative are recorded separately in [../adr](../adr).

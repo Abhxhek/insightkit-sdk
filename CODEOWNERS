@@ -1,0 +1,7 @@
+* @abhishek
+
+# The security kernel. Changes here alter the read-only guarantee.
+/packages/sql-guard/                @abhishek
+/packages/sql-guard/test/corpus/    @abhishek
+/security/                          @abhishek
+/.github/workflows/                 @abhishek

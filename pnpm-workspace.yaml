@@ -1,0 +1,8 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+  - 'examples/*'
+
+# Each entry is arbitrary code execution at install time. Reviewed exceptions only.
+allowBuilds:
+  esbuild: true
