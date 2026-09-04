@@ -140,27 +140,33 @@ describe('policy', () => {
 });
 
 describe('repository hygiene', () => {
-  it('no source file contains a raw NUL byte', async () => {
+  it('no source file contains a raw control byte', async () => {
     const { readdir, readFile } = await import('node:fs/promises');
     const { join, dirname } = await import('node:path');
     const { fileURLToPath } = await import('node:url');
     const packages = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
+    // Tab, newline and carriage return are the only control characters source may hold.
+    const allowed = new Set([9, 10, 13]);
     const offenders: string[] = [];
     for (const pkg of await readdir(packages, { withFileTypes: true })) {
       if (!pkg.isDirectory()) continue;
-      for (const root of ['src', 'test', 'corpus']) {
+      for (const root of ['src', 'test', 'corpus', 'scripts']) {
         const base = join(packages, pkg.name, root);
         const entries = await readdir(base, { recursive: true, withFileTypes: true }).catch(() => []);
         for (const e of entries) {
           if (!e.isFile()) continue;
           const buf = await readFile(join(e.parentPath ?? base, e.name));
-          if (buf.includes(0)) offenders.push(`${pkg.name}/${root}/${e.name}`);
+          const found = [...new Set(buf.filter((b) => (b < 32 && !allowed.has(b)) || b === 127))];
+          if (found.length > 0) {
+            const which = found.map((b) => `0x${b.toString(16).padStart(2, '0')}`).join(', ');
+            offenders.push(`${pkg.name}/${root}/${e.name}: ${which}`);
+          }
         }
       }
     }
     expect(
       offenders,
-      'a raw NUL makes git treat the file as binary, so it produces no reviewable diff',
+      'a raw control byte makes git treat the file as binary and silently defeats exact-match editing',
     ).toEqual([]);
   });
 });

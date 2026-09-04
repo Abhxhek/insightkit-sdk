@@ -12,5 +12,6 @@ Chapters appear as the corresponding code lands. There is deliberately no outlin
 | 04 | [Measuring a system that guesses](./04-measuring-a-system-that-guesses.md) | why the eval comes before the planner, two adversarial surfaces, multiset comparison and the transitivity trap, three-state outcomes, why a spend cap needs bounded concurrency, safety vs fidelity |
 | 05 | [Turning a claim about text into a claim about the database](./05-making-a-guarantee-real.md) | capabilities vs conventions, unforgeable brands, the sealed read-only transaction, why it never commits, fail-closed interpolation, proving isolation from the catalog |
 | 06 | [Telling a model what it may look at](./06-telling-a-model-what-it-may-look-at.md) | why a schema is information, letting Postgres answer privilege questions, column grants and foreign-key disclosure, `conkey` vs `indkey`, testing SQL you cannot run, detecting truncation |
+| 07 | [Choosing what goes in the prompt](./07-choosing-what-goes-in-the-prompt.md) | why more context is worse, DDL as the prompt format, lexical scoring and symmetric stemming, foreign-key expansion, measuring a token budget by rendering, why not embeddings yet |
 
 Decisions with a real alternative are recorded separately in [../adr](../adr).
