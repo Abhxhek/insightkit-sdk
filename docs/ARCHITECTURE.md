@@ -111,7 +111,8 @@ Core is where G1 stops being a claim about SQL text and becomes a claim about th
 5. **`pg_temp` is off the search path** — a writable temp schema on the path is the CVE-2018-1058 shadowing vector.
 6. **Fail closed on interpolation.** `SET LOCAL` cannot take bind parameters, so identifiers are validated against a strict pattern and timeouts against a range. Throw, never escape.
 7. **A check that could not run is a failure.** Otherwise a locked-down database produces a green proof by refusing to answer.
-8. **No driver dependency.** Core defines the client shape structurally, so it is testable without a database and a second driver is an interface implementation rather than a rewrite. Rows must be arrays: object rows collapse `SELECT a.id, b.id` to one key.
+8. **No driver dependency.** Core defines the client shape structurally, so it is testable without a database and a second driver is an interface implementation rather than a rewrite. Rows must be arrays: object rows collapse `SELECT a.id, b.id` to one key. The node-postgres adapter lives behind the `@insightkit/core/pg` subpath with `pg` as an *optional* peer dependency, so the main entry never references a driver.
+9. **Lossy driver conversions cross the boundary as text.** node-postgres turns a `date` into a JS `Date` at local midnight, so `2026-09-05` serialises to the 4th anywhere east of UTC — a wrong axis with no error, dependent on the server's timezone. `date`, `time`, `timestamp`, `interval`, `bytea` and `numeric[]` are returned as the text Postgres sent; everything the driver gets right is left alone. The registry is per-query — `pg.types.setTypeParser` is global and would change the host application's own queries. See ADR 0007.
 
 ## State
 
@@ -119,6 +120,6 @@ Core is where G1 stops being a claim about SQL text and becomes a claim about th
 
 Not started: `protocol`, `llm`, `server`, `react`, `cli`.
 
-**Nothing has run against a real Postgres.** Core is tested entirely against a recording fake, which proves what we send and what we refuse, not how the server responds. Testcontainers e2e is the highest-value work remaining.
+**Nothing has run against a real Postgres.** Core is tested against a recording fake and, for the adapter, against node-postgres' own `Result` parser — which proves what we send, what we refuse, and how the driver converts, but not how a server responds. `pnpm --filter @insightkit/core smoke` turns the outstanding claims into observations against a live database; it is the first thing to run once one exists. Testcontainers e2e remains the highest-value work.
 
 Still asserted open in the eval corpus: `column-policy` (T4-S01), `tenant-scoping` (T4-S02), `cost-ceiling` (T4-S04), `planner-hardening` (T4-S05/S06).
