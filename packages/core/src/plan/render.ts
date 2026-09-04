@@ -35,28 +35,28 @@ function renderTable(table: TableInfo, outbound: readonly ForeignKey[], options:
   }
   lines.push(`CREATE ${KEYWORD[table.kind] ?? 'TABLE'} ${qualified(table.schema, table.name)} (`);
 
-  const body: string[] = table.columns.map((c) => {
-    const note = withComments && c.comment !== null ? ` -- ${comment(c.comment)}` : '';
-    return `  ${ident(c.name)} ${c.dataType}${c.nullable ? '' : ' NOT NULL'},${note}`;
-  });
+  // The separator sits between a definition and its trailing comment, so the two are
+  // kept apart and joined once the last entry is known. Emitting the comma eagerly and
+  // pulling it back off would mean a pattern searching comment text we do not control.
+  const body: { code: string; note: string }[] = table.columns.map((c) => ({
+    code: `${ident(c.name)} ${c.dataType}${c.nullable ? '' : ' NOT NULL'}`,
+    note: withComments && c.comment !== null ? ` -- ${comment(c.comment)}` : '',
+  }));
 
   if (table.primaryKey.length > 0) {
-    body.push(`  PRIMARY KEY (${table.primaryKey.map(ident).join(', ')}),`);
+    body.push({ code: `PRIMARY KEY (${table.primaryKey.map(ident).join(', ')})`, note: '' });
   }
   for (const fk of outbound) {
-    body.push(
-      `  FOREIGN KEY (${fk.from.columns.map(ident).join(', ')}) REFERENCES ` +
-        `${qualified(fk.to.schema, fk.to.table)} (${fk.to.columns.map(ident).join(', ')}),`,
-    );
+    body.push({
+      code:
+        `FOREIGN KEY (${fk.from.columns.map(ident).join(', ')}) REFERENCES ` +
+        `${qualified(fk.to.schema, fk.to.table)} (${fk.to.columns.map(ident).join(', ')})`,
+      note: '',
+    });
   }
 
-  // Trailing commas are stripped from the final entry only, so a comment on the last
-  // column does not end up between the comma and the closing paren.
   const last = body.length - 1;
-  const entry = body[last];
-  if (entry !== undefined) body[last] = entry.replace(/,(\s*--.*)?$/, '$1');
-
-  lines.push(...body, ');');
+  lines.push(...body.map((e, i) => `  ${e.code}${i === last ? '' : ','}${e.note}`), ');');
   return lines.join('\n');
 }
 

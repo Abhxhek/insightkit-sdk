@@ -120,9 +120,32 @@ describe('rendering a schema for a prompt', () => {
     expect(renderSchema([view], [])).toContain('CREATE VIEW public.summary (');
   });
 
-  it('keeps a comment on the last column outside the comma it removed', () => {
+  it('puts a comment on the last column after the separator it does not get', () => {
     const one = table('public', 't', [col('a', 'text', { comment: 'note' })]);
     expect(renderSchema([one], [])).toContain('a text -- note');
+  });
+
+  it('keeps the separator before a comment on every earlier column', () => {
+    const two = table('public', 't', [
+      col('a', 'text', { comment: 'first' }),
+      col('b', 'text', { comment: 'second' }),
+    ]);
+    const sql = renderSchema([two], []);
+    expect(sql).toContain('a text, -- first');
+    expect(sql).toContain('b text -- second');
+  });
+
+  it('renders a comment made of commas, dashes and newlines without disturbing the shape', () => {
+    const nasty = table('public', 't', [
+      col('a', 'text', { comment: ',--'.repeat(200) }),
+      col('b', 'text', { comment: 'line one\nline two' }),
+    ]);
+    const sql = renderSchema([nasty], []);
+    expect(sql.trimEnd().endsWith(');')).toBe(true);
+    expect(sql).not.toMatch(/,\s*\)/);
+    // Comments are collapsed to one line, so a newline cannot break out of the DDL.
+    expect(sql).toContain('b text -- line one line two');
+    expect(sql.split('\n').filter((l) => l.startsWith('CREATE'))).toHaveLength(1);
   });
 });
 
