@@ -6,6 +6,7 @@ export type { CaseInput, CaseOutcome, CorpusRun, CorpusRunOptions, RunnerDeps } 
 export { isTransientByMessage, runCase, runCorpus } from './runner.js';
 export type {
   AdversarialCase,
+  AdversarialExpectation,
   AdversarialSurface,
   Baseline,
   CaseResult,

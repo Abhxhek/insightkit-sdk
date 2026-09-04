@@ -26,14 +26,16 @@ export interface GoldenCase {
   readonly tests: string;
 }
 
+export type AdversarialExpectation = 'blocked' | 'neutralised' | 'unhandled';
+
 export interface AdversarialCase {
   readonly id: string;
   readonly surface: AdversarialSurface;
   readonly prompt: string;
   readonly sql: string | null;
-  readonly expectBlocked: boolean;
+  readonly expect: AdversarialExpectation;
   readonly expectCode: string | null;
-  readonly blockedBy: string | null;
+  readonly handledBy: string | null;
   readonly why: string;
 }
 

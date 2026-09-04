@@ -24,6 +24,12 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@24.13.3)(supports-color@7.2.0)
 
+  packages/core:
+    dependencies:
+      '@insightkit/sql-guard':
+        specifier: workspace:*
+        version: link:../sql-guard
+
   packages/eval:
     dependencies:
       '@insightkit/sql-guard':
