@@ -1,11 +1,69 @@
+# Dependencies and build output
 node_modules/
 dist/
+build/
 coverage/
 *.tsbuildinfo
-.DS_Store
+.turbo/
+*.tgz
+
+# Caches
+.cache/
+.eslintcache
+.vitest-cache/
+.biome-cache/
+
+# Environment and credentials
 .env
 .env.*
 !.env.example
+.npmrc.local
+.netrc
+.pgpass
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+credentials.json
+service-account*.json
+gha-creds-*.json
+*.tfvars
+terraform.tfstate*
+
+# Database material. This SDK runs inside customer production databases, so a
+# dump landing here is the worst incident the project can have. Broad on purpose.
+*.dump
+*.sql.gz
+*.sql.bz2
+dump*.sql
+backup*.sql
+*.sqlite
+*.sqlite3
+*.db
+pgdata/
+postgres-data/
+
+# Evaluation runs carry prompts, model output and spend figures
+eval-results/
+*.eval.json
+.eval-baseline.json
+
+# Editors and operating systems
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local scratch
+probe*.mjs
+scratch/
+tmp/
 *.log
-.turbo/
-probe.mjs

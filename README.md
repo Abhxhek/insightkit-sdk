@@ -83,6 +83,7 @@ The evaluation corpus lives in [`packages/eval`](./packages/eval) — a referenc
 
 ## Documentation
 
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) — the constraints, the package boundaries, and the rules that are not negotiable
 - [docs/learn](./docs/learn) — how this works and why it is shaped this way, written alongside the code
 - [docs/adr](./docs/adr) — decisions with a real alternative, and the reasoning
 - [SECURITY.md](./SECURITY.md) — reporting, scope, and what counts as a vulnerability
