@@ -24,6 +24,16 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@24.13.3)(supports-color@7.2.0)
 
+  packages/eval:
+    dependencies:
+      '@insightkit/sql-guard':
+        specifier: workspace:*
+        version: link:../sql-guard
+    devDependencies:
+      pgsql-parser:
+        specifier: 18.2.6
+        version: 18.2.6
+
   packages/sql-guard:
     dependencies:
       pgsql-parser:

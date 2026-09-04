@@ -48,6 +48,29 @@ module.exports = {
       to: { path: '^(node:)?(fs|net|http|https|child_process|tls|dns)(/|$)|^pg(-|$)|^packages/' },
     },
     {
+      name: 'eval-measures-the-shipped-system',
+      severity: 'error',
+      comment:
+        'The harness must exercise the code we publish. A direct driver import would let a reference query run on a path production never uses, and the gate would then be green about a different system.',
+      from: { path: '^packages/eval/(src|test)' },
+      to: { path: '^pg(-|$)|^postgres$|^node-postgres$' },
+    },
+    {
+      name: 'nothing-ships-the-harness',
+      severity: 'error',
+      comment: 'eval is a gate, not a dependency. No published package may import it.',
+      from: { path: '^packages/(?!eval/)' },
+      to: { path: '^packages/eval/' },
+    },
+    {
+      name: 'eval-src-is-pure',
+      severity: 'error',
+      comment:
+        'Scoring must be reproducible from a results file. The comparator, the gate and the runner take their I/O as injected functions.',
+      from: { path: '^packages/eval/src' },
+      to: { path: '^(node:)?(fs|net|http|https|child_process|dgram|tls|dns|worker_threads|vm|cluster)(/|$)' },
+    },
+    {
       name: 'no-circular',
       severity: 'error',
       from: {},

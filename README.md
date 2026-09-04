@@ -65,6 +65,7 @@ packages/
   server/       HTTP handlers (next / express / fastify / hono)
   react/        components and hooks - browser only
   cli/          ik init | doctor | migrate
+  eval/         release gate - corpus + harness, never published
 ```
 
 `react` may never import `core` — one such import in a Next.js client component would ship your connection string into the browser bundle. `llm` may never import `sql-guard` — the code talking to an untrusted model does not sit beside the code deciding what is trusted.
@@ -76,7 +77,9 @@ pnpm install
 pnpm verify     # typecheck + dependency rules + tests
 ```
 
-`pnpm verify` is the gate. It runs the full adversarial corpus, which must pass at 100%.
+`pnpm verify` is the gate: typecheck, lint, dependency rules, build, then tests. It runs the full adversarial corpus, which must pass at 100%.
+
+The evaluation corpus lives in [`packages/eval`](./packages/eval) — a reference schema, a golden question set, and the scorer. It deliberately contains adversarial cases the product does **not** yet block; each names the component that will block it, and asserts the gap is still open so it cannot be closed silently.
 
 ## Documentation
 

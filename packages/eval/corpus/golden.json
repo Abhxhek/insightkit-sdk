@@ -1,0 +1,252 @@
+[
+  {
+    "id": "T1-01",
+    "tier": "T1",
+    "prompt": "Weekly signups for the last 3 months, split by Google login vs email",
+    "sql": "WITH first_identity AS (SELECT DISTINCT ON (user_id) user_id, provider FROM auth_identities ORDER BY user_id, created_at) SELECT date_trunc('week', u.created_at) AS week, CASE WHEN fi.provider = 'google' THEN 'google' ELSE 'email' END AS method, count(*) AS signups FROM users u JOIN first_identity fi ON fi.user_id = u.id WHERE u.deleted_at IS NULL AND u.created_at >= date_trunc('week', now() - interval '3 months') GROUP BY 1, 2 ORDER BY 1, 2",
+    "chart": "stacked_bar",
+    "orderSensitive": true,
+    "tags": ["date-bucketing", "first-identity", "soft-delete"],
+    "tests": "The canonical question. Week bucketing, first-identity semantics, provider grouping and the soft-delete filter all at once."
+  },
+  {
+    "id": "T1-02",
+    "tier": "T1",
+    "prompt": "How many users joined this month vs last month?",
+    "sql": "SELECT date_trunc('month', created_at) AS month, count(*) AS signups FROM users WHERE deleted_at IS NULL AND created_at >= date_trunc('month', now() - interval '1 month') GROUP BY 1 ORDER BY 1",
+    "chart": "bar",
+    "orderSensitive": true,
+    "tags": ["relative-periods", "soft-delete"],
+    "tests": "Relative periods and a partial current period."
+  },
+  {
+    "id": "T1-03",
+    "tier": "T1",
+    "prompt": "Show total MRR by plan",
+    "sql": "SELECT o.plan, sum(s.mrr_cents) / 100.0 AS mrr FROM subscriptions s JOIN organizations o ON o.id = s.org_id WHERE s.status IN ('active', 'past_due') GROUP BY o.plan ORDER BY mrr DESC",
+    "chart": "bar",
+    "orderSensitive": true,
+    "tags": ["cents", "join", "status-filter"],
+    "tests": "Cents to currency, and knowing which subscription statuses count as revenue."
+  },
+  {
+    "id": "T1-04",
+    "tier": "T1",
+    "prompt": "Daily active users for the last 30 days",
+    "sql": "SELECT date_trunc('day', occurred_at) AS day, count(DISTINCT user_id) AS dau FROM events WHERE occurred_at >= now() - interval '30 days' AND user_id IS NOT NULL GROUP BY 1 ORDER BY 1",
+    "chart": "line",
+    "orderSensitive": true,
+    "tags": ["distinct", "day-bucketing"],
+    "tests": "COUNT DISTINCT over events with day bucketing."
+  },
+  {
+    "id": "T1-05",
+    "tier": "T1",
+    "prompt": "Top 10 organizations by number of projects",
+    "sql": "SELECT o.name, count(p.id) AS project_count FROM organizations o JOIN projects p ON p.org_id = o.id WHERE p.archived_at IS NULL GROUP BY o.id, o.name ORDER BY project_count DESC LIMIT 10",
+    "chart": "bar",
+    "orderSensitive": true,
+    "tags": ["join", "top-n"],
+    "tests": "Join, aggregate, order and limit. Order is part of the answer."
+  },
+  {
+    "id": "T1-06",
+    "tier": "T1",
+    "prompt": "What percentage of invited users never accepted?",
+    "sql": "SELECT round(100.0 * count(*) FILTER (WHERE accepted_at IS NULL) / nullif(count(*), 0), 2) AS pct_never_accepted FROM memberships WHERE invited_at IS NOT NULL",
+    "chart": "kpi",
+    "orderSensitive": false,
+    "tags": ["null-semantics", "ratio", "filter-clause"],
+    "tests": "NULL as a business condition, and a ratio that must not divide by zero."
+  },
+  {
+    "id": "T1-07",
+    "tier": "T1",
+    "prompt": "New organizations per month this year",
+    "sql": "SELECT date_trunc('month', created_at) AS month, count(*) AS orgs FROM organizations WHERE created_at >= date_trunc('year', now()) GROUP BY 1 ORDER BY 1",
+    "chart": "line",
+    "orderSensitive": true,
+    "tags": ["time-series"],
+    "tests": "The baseline. If this fails, nothing else is worth measuring."
+  },
+  {
+    "id": "T1-08",
+    "tier": "T1",
+    "prompt": "How many customers churned last quarter?",
+    "sql": "SELECT count(*) AS churned FROM organizations WHERE churned_at >= date_trunc('quarter', now() - interval '3 months') AND churned_at < date_trunc('quarter', now())",
+    "chart": "kpi",
+    "orderSensitive": false,
+    "tags": ["quarter-boundaries", "churn-definition"],
+    "tests": "Quarter boundaries, and churned_at as the definition of churn."
+  },
+  {
+    "id": "T2-09",
+    "tier": "T2",
+    "prompt": "Signup-to-first-project conversion rate by month",
+    "sql": "WITH cohort AS (SELECT u.id, date_trunc('month', u.created_at) AS month FROM users u WHERE u.deleted_at IS NULL), converted AS (SELECT DISTINCT created_by AS user_id FROM projects WHERE created_by IS NOT NULL) SELECT c.month, count(*) AS signups, count(cv.user_id) AS converted, round(100.0 * count(cv.user_id) / nullif(count(*), 0), 2) AS conversion_pct FROM cohort c LEFT JOIN converted cv ON cv.user_id = c.id GROUP BY c.month ORDER BY c.month",
+    "chart": "line",
+    "orderSensitive": true,
+    "tags": ["funnel", "cte", "left-join"],
+    "tests": "Two-event funnel across tables, where the LEFT JOIN is what makes the denominator right."
+  },
+  {
+    "id": "T2-10",
+    "tier": "T2",
+    "prompt": "Retention: of users who joined in January, how many were active in March?",
+    "sql": "WITH jan AS (SELECT id FROM users WHERE deleted_at IS NULL AND created_at >= date_trunc('year', now()) AND created_at < date_trunc('year', now()) + interval '1 month') SELECT count(DISTINCT e.user_id) AS retained FROM events e JOIN jan ON jan.id = e.user_id WHERE e.occurred_at >= date_trunc('year', now()) + interval '2 months' AND e.occurred_at < date_trunc('year', now()) + interval '3 months'",
+    "chart": "kpi",
+    "orderSensitive": false,
+    "tags": ["cohort", "two-time-anchors"],
+    "tests": "A cohort with two independent time anchors."
+  },
+  {
+    "id": "T2-11",
+    "tier": "T2",
+    "prompt": "Average revenue per active organization",
+    "sql": "SELECT sum(s.mrr_cents) / 100.0 / nullif(count(DISTINCT s.org_id), 0) AS arpa FROM subscriptions s JOIN organizations o ON o.id = s.org_id WHERE s.status = 'active' AND o.churned_at IS NULL",
+    "chart": "kpi",
+    "orderSensitive": false,
+    "tags": ["ambiguous-denominator", "cents"],
+    "tests": "Which denominator? A correct answer must state the assumption it chose."
+  },
+  {
+    "id": "T2-12",
+    "tier": "T2",
+    "prompt": "Which plans have the highest churn?",
+    "sql": "SELECT plan, count(*) FILTER (WHERE churned_at IS NOT NULL) AS churned, count(*) AS total, round(100.0 * count(*) FILTER (WHERE churned_at IS NOT NULL) / nullif(count(*), 0), 2) AS churn_pct FROM organizations GROUP BY plan ORDER BY churn_pct DESC",
+    "chart": "bar",
+    "orderSensitive": true,
+    "tags": ["rate-not-count", "filter-clause"],
+    "tests": "Rate, not count. The classic aggregation error is answering with the raw number."
+  },
+  {
+    "id": "T2-13",
+    "tier": "T2",
+    "prompt": "Show me the signup funnel: signed up, verified, created a project",
+    "sql": "SELECT 'signed_up' AS step, count(DISTINCT u.id) AS users FROM users u WHERE u.deleted_at IS NULL UNION ALL SELECT 'verified', count(DISTINCT ai.user_id) FROM auth_identities ai UNION ALL SELECT 'created_project', count(DISTINCT p.created_by) FROM projects p WHERE p.created_by IS NOT NULL",
+    "chart": "funnel",
+    "orderSensitive": true,
+    "tags": ["set-operation", "funnel-chart"],
+    "tests": "UNION ALL across three shapes, and a funnel chart rather than a bar."
+  },
+  {
+    "id": "T2-14",
+    "tier": "T2",
+    "prompt": "Users by auth provider, but only counting people who are still active",
+    "sql": "SELECT ai.provider, count(DISTINCT u.id) AS users FROM users u JOIN auth_identities ai ON ai.user_id = u.id WHERE u.deleted_at IS NULL AND u.last_seen_at >= now() - interval '30 days' GROUP BY ai.provider ORDER BY users DESC",
+    "chart": "bar",
+    "orderSensitive": true,
+    "tags": ["interacting-filters"],
+    "tests": "Two filters that interact: not deleted, and recently seen."
+  },
+  {
+    "id": "T2-15",
+    "tier": "T2",
+    "prompt": "Month-over-month growth rate of paid organizations",
+    "sql": "WITH monthly AS (SELECT date_trunc('month', o.created_at) AS month, count(*) AS orgs FROM organizations o WHERE o.plan <> 'free' GROUP BY 1) SELECT month, orgs, lag(orgs) OVER (ORDER BY month) AS prev, round(100.0 * (orgs - lag(orgs) OVER (ORDER BY month)) / nullif(lag(orgs) OVER (ORDER BY month), 0), 2) AS growth_pct FROM monthly ORDER BY month",
+    "chart": "line",
+    "orderSensitive": true,
+    "tags": ["window-function", "lag"],
+    "tests": "A window function, and knowing that paid means plan is not free."
+  },
+  {
+    "id": "T2-16",
+    "tier": "T2",
+    "prompt": "How long does the average trial last before converting?",
+    "sql": "SELECT avg(s.started_at - o.created_at) AS avg_trial_length FROM subscriptions s JOIN organizations o ON o.id = s.org_id WHERE s.status IN ('active', 'past_due') AND o.trial_ends_at IS NOT NULL",
+    "chart": "kpi",
+    "orderSensitive": false,
+    "tags": ["interval-arithmetic"],
+    "tests": "Interval arithmetic between two timestamps."
+  },
+  {
+    "id": "T2-17",
+    "tier": "T2",
+    "prompt": "Compare weekday vs weekend signups",
+    "sql": "SELECT CASE WHEN extract(dow FROM created_at) IN (0, 6) THEN 'weekend' ELSE 'weekday' END AS day_type, count(*) AS signups FROM users WHERE deleted_at IS NULL GROUP BY 1 ORDER BY 1",
+    "chart": "bar",
+    "orderSensitive": true,
+    "tags": ["extract", "derived-grouping"],
+    "tests": "A grouping derived from a timestamp rather than stored."
+  },
+  {
+    "id": "T2-18",
+    "tier": "T2",
+    "prompt": "Which events are most common for orgs that later churned?",
+    "sql": "SELECT e.name, count(*) AS occurrences FROM events e WHERE e.org_id IN (SELECT id FROM organizations WHERE churned_at IS NOT NULL) GROUP BY e.name ORDER BY occurrences DESC LIMIT 20",
+    "chart": "bar",
+    "orderSensitive": true,
+    "tags": ["subquery", "top-n"],
+    "tests": "A subquery used as a filter, and a top-N where order is the answer."
+  },
+  {
+    "id": "T2-19",
+    "tier": "T2",
+    "prompt": "Revenue by month, cumulative",
+    "sql": "WITH monthly AS (SELECT date_trunc('month', issued_at) AS month, sum(amount_cents) / 100.0 AS revenue FROM invoices WHERE status = 'paid' GROUP BY 1) SELECT month, revenue, sum(revenue) OVER (ORDER BY month ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS cumulative FROM monthly ORDER BY month",
+    "chart": "area",
+    "orderSensitive": true,
+    "tags": ["window-frame", "running-total"],
+    "tests": "An explicit window frame. Only paid invoices are revenue."
+  },
+  {
+    "id": "T2-20",
+    "tier": "T2",
+    "prompt": "Which orgs have a seat_count that doesn't match their actual membership count?",
+    "sql": "SELECT o.id, o.name, o.seat_count, count(m.user_id) AS actual_members FROM organizations o LEFT JOIN memberships m ON m.org_id = o.id AND m.accepted_at IS NOT NULL GROUP BY o.id, o.name, o.seat_count HAVING count(m.user_id) <> o.seat_count ORDER BY abs(count(m.user_id) - o.seat_count) DESC LIMIT 50",
+    "chart": "table",
+    "orderSensitive": true,
+    "tags": ["data-integrity-trap", "having"],
+    "tests": "The denormalised-column trap. A model that trusts seat_count answers zero."
+  },
+  {
+    "id": "T3-21",
+    "tier": "T3",
+    "prompt": "How many active users?",
+    "sql": null,
+    "chart": "kpi",
+    "orderSensitive": false,
+    "tags": ["ambiguous"],
+    "tests": "Active could mean seen recently, has events, not deleted, or not churned. Pass requires asking or stating which was chosen."
+  },
+  {
+    "id": "T3-22",
+    "tier": "T3",
+    "prompt": "Show me our best customers",
+    "sql": null,
+    "chart": "table",
+    "orderSensitive": false,
+    "tags": ["ambiguous"],
+    "tests": "Best by revenue, seats, tenure or engagement. Any is defensible; silence is not."
+  },
+  {
+    "id": "T3-23",
+    "tier": "T3",
+    "prompt": "Growth over time",
+    "sql": null,
+    "chart": "line",
+    "orderSensitive": false,
+    "tags": ["ambiguous"],
+    "tests": "Growth of users, organizations or revenue."
+  },
+  {
+    "id": "T3-24",
+    "tier": "T3",
+    "prompt": "How are we doing?",
+    "sql": null,
+    "chart": "none",
+    "orderSensitive": false,
+    "tags": ["ambiguous", "graceful-decline"],
+    "tests": "Too vague to answer. Pass requires declining gracefully and offering concrete options."
+  },
+  {
+    "id": "T3-25",
+    "tier": "T3",
+    "prompt": "Users from last week",
+    "sql": null,
+    "chart": "table",
+    "orderSensitive": false,
+    "tags": ["ambiguous", "date-semantics"],
+    "tests": "Last calendar week or trailing seven days. The two give different numbers."
+  }
+]

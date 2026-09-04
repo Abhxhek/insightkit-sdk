@@ -1,0 +1,25 @@
+{
+  "name": "@insightkit/eval",
+  "version": "0.0.0",
+  "description": "The InsightKit evaluation gate: the reference schema, the golden question set, and the harness that scores a release against them. Never published.",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@insightkit/sql-guard": "workspace:*"
+  },
+  "devDependencies": {
+    "pgsql-parser": "18.2.6"
+  }
+}

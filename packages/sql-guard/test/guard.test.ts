@@ -144,14 +144,18 @@ describe('repository hygiene', () => {
     const { readdir, readFile } = await import('node:fs/promises');
     const { join, dirname } = await import('node:path');
     const { fileURLToPath } = await import('node:url');
-    const pkg = dirname(dirname(fileURLToPath(import.meta.url)));
+    const packages = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
     const offenders: string[] = [];
-    for (const root of ['src', 'test']) {
-      const base = join(pkg, root);
-      for (const e of await readdir(base, { recursive: true, withFileTypes: true })) {
-        if (!e.isFile()) continue;
-        const buf = await readFile(join(e.parentPath ?? base, e.name));
-        if (buf.includes(0)) offenders.push(e.name);
+    for (const pkg of await readdir(packages, { withFileTypes: true })) {
+      if (!pkg.isDirectory()) continue;
+      for (const root of ['src', 'test', 'corpus']) {
+        const base = join(packages, pkg.name, root);
+        const entries = await readdir(base, { recursive: true, withFileTypes: true }).catch(() => []);
+        for (const e of entries) {
+          if (!e.isFile()) continue;
+          const buf = await readFile(join(e.parentPath ?? base, e.name));
+          if (buf.includes(0)) offenders.push(`${pkg.name}/${root}/${e.name}`);
+        }
       }
     }
     expect(
