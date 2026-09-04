@@ -1,0 +1,24 @@
+{
+  "name": "@insightkit/core",
+  "version": "0.0.0",
+  "description": "The InsightKit engine. Owns the two-role connection split, the sealed read-only transaction, and the isolation proofs. The only package that talks to a database.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@insightkit/sql-guard": "workspace:*"
+  }
+}

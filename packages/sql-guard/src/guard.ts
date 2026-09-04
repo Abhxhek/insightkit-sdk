@@ -1,6 +1,7 @@
 import { deparseSync, parseSync } from 'pgsql-parser';
 import { ALLOWED_FIELDS, ALLOWED_TAGS } from './allowlist.js';
 import { ALLOWED_FUNCTION_SCHEMAS, ALLOWED_FUNCTIONS } from './functions.js';
+import { applyRowCap, effectiveLimit } from './rowcap.js';
 import type { DenyCode, Policy, TableRef, Verdict } from './types.js';
 
 const DEFAULT_MAX_DEPTH = 100;
@@ -142,13 +143,28 @@ function inspect(sql: string, policy: Policy): { verdict: Verdict; tree?: unknow
   const policyDenial = applyPolicy(scan, policy);
   if (policyDenial) return { verdict: policyDenial };
 
-  return { verdict: { ok: true, sql, tables: scan.tables }, tree: parsed };
+  return { verdict: { ok: true, sql, tables: scan.tables, rowLimit: null }, tree: parsed };
+}
+
+function selectOf(tree: unknown): Record<string, unknown> | null {
+  const stmts = (tree as { stmts?: Array<{ stmt?: Record<string, unknown> }> } | undefined)?.stmts;
+  const select = stmts?.[0]?.stmt?.SelectStmt;
+  return select !== null && typeof select === 'object' ? (select as Record<string, unknown>) : null;
 }
 
 export function guardWith(sql: string, policy: Policy = {}): Verdict {
   try {
     const first = inspect(sql, policy);
     if (!first.verdict.ok) return first.verdict;
+
+    let rowLimit: number | null = null;
+    if (policy.maxRows !== undefined) {
+      const select = selectOf(first.tree);
+      if (select === null) return deny('E_INTERNAL', 'validated tree exposes no SelectStmt');
+      const capped = applyRowCap(select, policy.maxRows);
+      if (!capped.ok) return deny(capped.code, capped.detail);
+      rowLimit = capped.limit;
+    }
 
     let emitted: string;
     try {
@@ -162,7 +178,15 @@ export function guardWith(sql: string, policy: Policy = {}): Verdict {
       return deny('E_ROUND_TRIP_FAILED', `emitted sql rejected on re-inspection: ${second.verdict.code}`);
     }
 
-    return { ok: true, sql: emitted, tables: second.verdict.tables };
+    if (policy.maxRows !== undefined) {
+      const emittedSelect = selectOf(second.tree);
+      const present = emittedSelect === null ? { kind: 'dynamic' as const } : effectiveLimit(emittedSelect);
+      if (present.kind !== 'static' || present.value > policy.maxRows) {
+        return deny('E_ROUND_TRIP_FAILED', 'row cap is not present in the emitted sql');
+      }
+    }
+
+    return { ok: true, sql: emitted, tables: second.verdict.tables, rowLimit };
   } catch (err) {
     return deny('E_INTERNAL', err instanceof Error ? err.message : 'unknown internal failure');
   }

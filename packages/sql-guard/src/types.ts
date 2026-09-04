@@ -10,6 +10,8 @@ export type DenyCode =
   | 'E_SCHEMA_NOT_ALLOWED'
   | 'E_TABLE_NOT_ALLOWED'
   | 'E_DEPTH_EXCEEDED'
+  | 'E_LIMIT_NOT_STATIC'
+  | 'E_LIMIT_NOT_ENFORCEABLE'
   | 'E_ROUND_TRIP_FAILED'
   | 'E_INTERNAL';
 
@@ -22,10 +24,16 @@ export interface Policy {
   allowedSchemas?: readonly string[];
   allowedTables?: readonly string[];
   maxDepth?: number;
+  maxRows?: number;
 }
 
 export type Verdict =
-  | { readonly ok: true; readonly sql: string; readonly tables: readonly TableRef[] }
+  | {
+      readonly ok: true;
+      readonly sql: string;
+      readonly tables: readonly TableRef[];
+      readonly rowLimit: number | null;
+    }
   | { readonly ok: false; readonly code: DenyCode; readonly detail: string };
 
 export type Guard = (sql: string, policy?: Policy) => Verdict;

@@ -34,10 +34,14 @@ const MIN_GUARD_SURFACE = 9;
 
 const withSql = golden.filter((c): c is GoldenCase & { sql: string } => c.sql !== null);
 
+const MAX_ROWS = 1000;
+
 let guard: Guard;
+let capped: Guard;
 beforeAll(async () => {
   await loadModule();
   guard = await createGuard({ allowedSchemas: ['public'] });
+  capped = await createGuard({ allowedSchemas: ['public'], maxRows: MAX_ROWS });
 });
 
 describe('corpus integrity', () => {
@@ -104,8 +108,8 @@ describe('deparsing a reference query preserves its meaning', () => {
   }
 });
 
-describe('adversarial cases the guard is responsible for', () => {
-  for (const c of adversarial.filter((a) => a.surface === 'guard')) {
+describe('adversarial cases the guard refuses outright', () => {
+  for (const c of adversarial.filter((a) => a.expect === 'blocked')) {
     it(`${c.id} ${c.prompt}`, () => {
       expect(c.sql, `${c.id} must carry the SQL it is asserting about`).not.toBeNull();
       const v = guard(c.sql ?? '');
@@ -115,25 +119,39 @@ describe('adversarial cases the guard is responsible for', () => {
   }
 });
 
-describe('adversarial cases nothing blocks yet', () => {
-  it('names the component that will block each one', () => {
+describe('adversarial cases the guard neutralises rather than refuses', () => {
+  for (const c of adversarial.filter((a) => a.expect === 'neutralised')) {
+    it(`${c.id} ${c.prompt}`, () => {
+      const v = capped(c.sql ?? '');
+      expect(v.ok, `${c.id} was denied; it is expected to be allowed but made safe`).toBe(true);
+      if (!v.ok) return;
+      expect(v.rowLimit, `${c.id} carries no row limit`).toBe(MAX_ROWS);
+      expect(v.sql, `${c.id}: the cap must be in the emitted sql, not only in the verdict`).toMatch(
+        new RegExp(`LIMIT ${MAX_ROWS}\\b`),
+      );
+    });
+  }
+});
+
+describe('adversarial cases nothing handles yet', () => {
+  it('keeps every case consistent about what handles it', () => {
     for (const c of adversarial) {
-      if (c.expectBlocked) {
-        expect(c.blockedBy, c.id).toBeNull();
+      if (c.expect === 'blocked') {
+        expect(c.handledBy, c.id).toBeNull();
         expect(c.expectCode, c.id).not.toBeNull();
       } else {
-        expect(c.blockedBy, `${c.id} must name the component that will block it`).not.toBeNull();
+        expect(c.handledBy, `${c.id} must name the component that handles it`).not.toBeNull();
         expect(c.expectCode, c.id).toBeNull();
       }
     }
   });
 
-  for (const c of adversarial.filter((a) => !a.expectBlocked && a.sql !== null)) {
-    it(`${c.id} is still allowed, pending ${c.blockedBy}`, () => {
-      const v = guard(c.sql ?? '');
+  for (const c of adversarial.filter((a) => a.expect === 'unhandled' && a.sql !== null)) {
+    it(`${c.id} is still unhandled, pending ${c.handledBy}`, () => {
+      const v = capped(c.sql ?? '');
       expect(
         v.ok,
-        `${c.id} is now blocked. Good news: update expectBlocked and expectCode, and record that ${c.blockedBy} landed.`,
+        `${c.id} is now blocked. Good news: change expect to blocked or neutralised and record that ${c.handledBy} landed.`,
       ).toBe(true);
     });
   }

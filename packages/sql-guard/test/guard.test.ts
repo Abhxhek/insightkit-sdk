@@ -185,3 +185,89 @@ describe('deny codes are specific', () => {
     });
   }
 });
+
+describe('row cap', () => {
+  let capped: Guard;
+  beforeAll(async () => {
+    capped = await createGuard({ maxRows: 1000 });
+  });
+
+  it('adds a limit to a query that has none', () => {
+    const v = capped('SELECT * FROM users');
+    expect(v.ok).toBe(true);
+    if (!v.ok) return;
+    expect(v.rowLimit).toBe(1000);
+    expect(v.sql).toMatch(/LIMIT 1000/);
+  });
+
+  it('clamps a limit that exceeds the cap', () => {
+    const v = capped('SELECT * FROM users LIMIT 5000');
+    expect(v.ok && v.rowLimit).toBe(1000);
+    expect(v.ok && v.sql).toMatch(/LIMIT 1000/);
+  });
+
+  it('leaves a smaller limit alone', () => {
+    const v = capped('SELECT * FROM users LIMIT 10');
+    expect(v.ok && v.rowLimit).toBe(10);
+    expect(v.ok && v.sql).toMatch(/LIMIT 10\b/);
+  });
+
+  it('does not mistake LIMIT 0 for an absent limit', () => {
+    const v = capped('SELECT * FROM users LIMIT 0');
+    expect(v.ok && v.rowLimit).toBe(0);
+    expect(v.ok && v.sql).toMatch(/LIMIT 0\b/);
+  });
+
+  it('caps LIMIT ALL, which is a null constant rather than an absent one', () => {
+    const v = capped('SELECT * FROM users LIMIT ALL');
+    expect(v.ok && v.rowLimit).toBe(1000);
+  });
+
+  it('caps a limit too large to be an int32, which the parser stores as a float', () => {
+    const v = capped('SELECT * FROM users LIMIT 2147483648');
+    expect(v.ok && v.rowLimit).toBe(1000);
+  });
+
+  it('preserves top-N semantics rather than wrapping the query', () => {
+    const v = capped('SELECT id FROM users ORDER BY id DESC LIMIT 20 OFFSET 40');
+    expect(v.ok && v.rowLimit).toBe(20);
+    expect(v.ok && v.sql).toMatch(/ORDER BY\s+id DESC\s+LIMIT 20\s+OFFSET 40/);
+  });
+
+  it('applies the cap to a set operation at the top level', () => {
+    const v = capped('SELECT a FROM t UNION ALL SELECT b FROM u');
+    expect(v.ok && v.rowLimit).toBe(1000);
+    expect(v.ok && v.sql).toMatch(/LIMIT 1000/);
+  });
+
+  it('refuses WITH TIES, which can return more rows than its count', () => {
+    const v = capped('SELECT * FROM users ORDER BY id FETCH FIRST 10 ROWS WITH TIES');
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.code).toBe('E_LIMIT_NOT_ENFORCEABLE');
+  });
+
+  it('refuses a limit it cannot compare against the cap', () => {
+    const v = capped('SELECT * FROM users LIMIT $1');
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.code).toBe('E_LIMIT_NOT_STATIC');
+  });
+
+  it('refuses a nonsensical cap rather than ignoring it', async () => {
+    const bad = await createGuard({ maxRows: 0 });
+    const v = bad('SELECT 1');
+    expect(v.ok).toBe(false);
+    if (!v.ok) expect(v.code).toBe('E_INTERNAL');
+  });
+
+  it('reports no cap when none was requested', async () => {
+    const plain = await createGuard();
+    const v = plain('SELECT * FROM users');
+    expect(v.ok && v.rowLimit).toBeNull();
+    expect(v.ok && v.sql).not.toMatch(/LIMIT/);
+  });
+
+  it('still denies writes when a cap is configured', () => {
+    expect(capped('DELETE FROM users').ok).toBe(false);
+    expect(capped('SELECT * INTO x FROM users').ok).toBe(false);
+  });
+});

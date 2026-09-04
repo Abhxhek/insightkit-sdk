@@ -16,8 +16,9 @@ InsightKit runs inside your production database. A write that escapes would be d
 |---|---|
 | `sql-guard` | one statement, must be `SELECT`, allowlisted node types, fields and functions |
 | Deparse round-trip | what executes is re-emitted from the validated tree, never the input string |
+| Row cap | clamped into the validated tree, then read back out of the emitted SQL |
 | `ik_reader` role | `GRANT SELECT` only — there is no write privilege to escalate to |
-| Sealed read-only transaction | `BEGIN READ ONLY`, sealed, always rolled back |
+| Sealed read-only transaction | `BEGIN READ ONLY`, `SET LOCAL` only, server-confirmed, always rolled back |
 
 `ik doctor --prove-isolation` verifies the database-side guarantees against the live catalog rather than asking you to trust them.
 
@@ -60,7 +61,7 @@ The trust boundary is a package boundary, enforced in CI rather than by review.
 packages/
   sql-guard/    security kernel - pure, zero I/O
   protocol/     shared types (browser <-> server)
-  core/         engine - the only package that may import `pg`
+  core/         engine - two-role split, sealed read-only transaction, isolation proofs
   llm/          model provider adapters
   server/       HTTP handlers (next / express / fastify / hono)
   react/        components and hooks - browser only

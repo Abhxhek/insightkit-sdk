@@ -83,7 +83,7 @@ e2e/            Testcontainers: real Postgres, real roles, real RLS
 
 ```
 pnpm install
-pnpm verify      # build + typecheck + lint + dependency rules + tests. The gate.
+pnpm verify      # typecheck + lint + dependency rules + tests. The gate.
 pnpm test
 pnpm build
 ```
@@ -100,8 +100,25 @@ Accuracy is the product's central risk, and it is invisible without measurement.
 6. **`eval/src` is pure.** The clock and all I/O are injected, so scoring re-runs from a results file without re-spending tokens.
 7. **Tiers have minimum sizes.** The gate cannot be made green by making it smaller.
 
+## The reader path (`packages/core`)
+
+Core is where G1 stops being a claim about SQL text and becomes a claim about the database.
+
+1. **Capabilities, not conventions.** `asReaderSource` wraps a pool and exposes only `connect()`, so there is no `query()` to bypass the sealed transaction with. `ReaderSource` and `AdminSource` are distinct types.
+2. **A guarded query cannot be fabricated.** `approve()` is the only producer. The brand is a real runtime symbol, so a plain object fails to compile and a cast fails at runtime. What is left is a greppable `as` in a CODEOWNERS-gated file.
+3. **The transaction is sealed and never commits.** `BEGIN READ ONLY`, `SET LOCAL` for every setting, `SHOW transaction_read_only` to make the server confirm, then `ROLLBACK` unconditionally. `COMMIT` appears nowhere in the reader path and a test asserts it.
+4. **`SET LOCAL`, never `SET`** — a session setting leaks onto the next borrower of a pooled connection.
+5. **`pg_temp` is off the search path** — a writable temp schema on the path is the CVE-2018-1058 shadowing vector.
+6. **Fail closed on interpolation.** `SET LOCAL` cannot take bind parameters, so identifiers are validated against a strict pattern and timeouts against a range. Throw, never escape.
+7. **A check that could not run is a failure.** Otherwise a locked-down database produces a green proof by refusing to answer.
+8. **No driver dependency.** Core defines the client shape structurally, so it is testable without a database and a second driver is an interface implementation rather than a rewrite. Rows must be arrays: object rows collapse `SELECT a.id, b.id` to one key.
+
 ## State
 
-`sql-guard` (the security kernel) and `eval` (the release gate) are built and green. Nothing is published to npm.
+`sql-guard` (security kernel), `eval` (release gate) and `core` (reader path, isolation proofs, provisioning) are built and green. Nothing is published to npm.
 
-Not started: `core`, `protocol`, `llm`, `server`, `react`, `cli`. The next component is `core` — the two-pool split, the sealed read-only transaction, and the row cap that `T4-S03` currently asserts is missing.
+Not started: `protocol`, `llm`, `server`, `react`, `cli`.
+
+**Nothing has run against a real Postgres.** Core is tested entirely against a recording fake, which proves what we send and what we refuse, not how the server responds. Testcontainers e2e is the highest-value work remaining.
+
+Still asserted open in the eval corpus: `column-policy` (T4-S01), `tenant-scoping` (T4-S02), `cost-ceiling` (T4-S04), `planner-hardening` (T4-S05/S06).

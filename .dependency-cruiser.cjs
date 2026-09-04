@@ -71,6 +71,20 @@ module.exports = {
       to: { path: '^(node:)?(fs|net|http|https|child_process|dgram|tls|dns|worker_threads|vm|cluster)(/|$)' },
     },
     {
+      name: 'core-is-the-only-database-package',
+      severity: 'error',
+      comment: 'Every other package reaches the database through core, so there is one place where the sealed read-only transaction can be enforced.',
+      from: { path: '^packages/(?!core/)[^/]+/src' },
+      to: { path: '^pg(-|$)|^postgres$|^node-postgres$' },
+    },
+    {
+      name: 'core-never-reaches-the-browser',
+      severity: 'error',
+      comment: 'core holds connection material. It must not be importable from anything that ships to a browser bundle.',
+      from: { path: '^packages/core/src' },
+      to: { path: '^packages/(react|llm)/' },
+    },
+    {
       name: 'no-circular',
       severity: 'error',
       from: {},
