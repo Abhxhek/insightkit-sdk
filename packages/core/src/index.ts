@@ -25,6 +25,10 @@ export type {
   TableInfo,
   TableKind,
 } from './introspect/types.js';
+export type { RenderOptions } from './plan/render.js';
+export { estimateTokens, renderDatabase, renderSchema, tableKey } from './plan/render.js';
+export type { RetrieveOptions, Selection } from './plan/retrieve.js';
+export { selectTables, terms } from './plan/retrieve.js';
 export type { ProvisionConfig, ProvisionScript } from './provision.js';
 export { provisioningScript } from './provision.js';
 export type { Ask } from './session.js';
