@@ -8,7 +8,7 @@
  */
 import { createGuard } from '@insightkit/sql-guard';
 import pg from 'pg';
-import { approve, asReaderSource, runGuardedRead } from '../dist/index.js';
+import { approve, asReaderSource, introspectSchema, runGuardedRead } from '../dist/index.js';
 import { fromPgPool } from '../dist/pg.js';
 
 const url = process.env.DATABASE_URL;
@@ -88,6 +88,32 @@ try {
   } finally {
     c2.release();
   }
+
+  // Parsing proved these are valid Postgres. Only a server proves they run.
+  const schema = await introspectSchema(source, { excludeSchemas: ['insightkit'] });
+  record(
+    'the catalog queries execute',
+    true,
+    `${schema.tables.length} tables, ${schema.foreignKeys.length} foreign keys, as ${schema.observedAs}`,
+  );
+  record(
+    'no system schema leaked into the description',
+    schema.tables.every((t) => !t.schema.startsWith('pg_') && t.schema !== 'information_schema'),
+    [...new Set(schema.tables.map((t) => t.schema))].join(', ') || '(no tables visible)',
+  );
+  const withPk = schema.tables.filter((t) => t.primaryKey.length > 0);
+  record(
+    'primary keys come back in order',
+    withPk.every((t) => t.primaryKey.every((c) => t.columns.some((col) => col.name === c))),
+    `${withPk.length} tables with a primary key`,
+  );
+  record(
+    'every foreign key points at a table that was described',
+    schema.foreignKeys.every((fk) =>
+      schema.tables.some((t) => t.schema === fk.to.schema && t.name === fk.to.table),
+    ),
+    `${schema.foreignKeys.length} checked`,
+  );
 } catch (err) {
   record('smoke run completed', false, err.message);
 } finally {

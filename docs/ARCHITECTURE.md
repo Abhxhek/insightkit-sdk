@@ -113,10 +113,11 @@ Core is where G1 stops being a claim about SQL text and becomes a claim about th
 7. **A check that could not run is a failure.** Otherwise a locked-down database produces a green proof by refusing to answer.
 8. **No driver dependency.** Core defines the client shape structurally, so it is testable without a database and a second driver is an interface implementation rather than a rewrite. Rows must be arrays: object rows collapse `SELECT a.id, b.id` to one key. The node-postgres adapter lives behind the `@insightkit/core/pg` subpath with `pg` as an *optional* peer dependency, so the main entry never references a driver.
 9. **Lossy driver conversions cross the boundary as text.** node-postgres turns a `date` into a JS `Date` at local midnight, so `2026-09-05` serialises to the 4th anywhere east of UTC — a wrong axis with no error, dependent on the server's timezone. `date`, `time`, `timestamp`, `interval`, `bytea` and `numeric[]` are returned as the text Postgres sent; everything the driver gets right is left alone. The registry is per-query — `pg.types.setTypeParser` is global and would change the host application's own queries. See ADR 0007.
+10. **Introspection describes what the reader can see.** Every catalog query filters on `has_schema_privilege` / `has_table_privilege` / `has_column_privilege`, both ends of a foreign key are checked, and the metadata schema is excluded. Describing a withheld table puts its name and columns into a prompt, which is a disclosure even though no row leaks. Keys come from `pg_constraint.conkey` (a real `int2[]`) rather than `pg_index.indkey`. Results are capped, and each query selects one row past the cap so truncation is observed rather than inferred. See ADR 0008.
 
 ## State
 
-`sql-guard` (security kernel), `eval` (release gate) and `core` (reader path, isolation proofs, provisioning) are built and green. Nothing is published to npm.
+`sql-guard` (security kernel), `eval` (release gate) and `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection) are built and green. Nothing is published to npm.
 
 Not started: `protocol`, `llm`, `server`, `react`, `cli`.
 

@@ -9,8 +9,26 @@ export {
   runGuardedRead,
   sessionPreamble,
 } from './execute.js';
+export type { IntrospectionQueries } from './introspect/queries.js';
+export {
+  DEFAULT_MAX_COLUMNS,
+  DEFAULT_MAX_TABLES,
+  introspectionQueries,
+} from './introspect/queries.js';
+export { introspectSchema } from './introspect/run.js';
+export type {
+  ColumnInfo,
+  DatabaseSchema,
+  ForeignKey,
+  ForeignKeyEnd,
+  IntrospectOptions,
+  TableInfo,
+  TableKind,
+} from './introspect/types.js';
 export type { ProvisionConfig, ProvisionScript } from './provision.js';
 export { provisioningScript } from './provision.js';
+export type { Ask } from './session.js';
+export { inReadOnlyTransaction } from './session.js';
 export { asAdminSource, asReaderSource, isAdminSource, isReaderSource } from './source.js';
 export type {
   AdminSource,
