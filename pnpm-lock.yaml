@@ -36,6 +36,9 @@ importers:
       pg:
         specifier: ^8.23.0
         version: 8.23.0
+      pgsql-parser:
+        specifier: ^18.2.6
+        version: 18.2.6
 
   packages/eval:
     dependencies:

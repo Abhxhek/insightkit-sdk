@@ -1,40 +1,29 @@
-import { BEGIN_READ_ONLY, ROLLBACK } from '../execute.js';
+import { inReadOnlyTransaction } from '../session.js';
 import type { Check, CheckReport, ConnectionSource, IsolationProof } from '../types.js';
 
 export async function proveIsolation(
   source: ConnectionSource,
   checks: readonly Check[],
 ): Promise<IsolationProof> {
-  const client = await source.connect();
-  const reports: CheckReport[] = [];
-  let rolledBack = false;
-
-  try {
-    await client.query(BEGIN_READ_ONLY);
+  const reports = await inReadOnlyTransaction(source, async (ask) => {
+    const collected: CheckReport[] = [];
     for (const check of checks) {
       const base = { id: check.id, title: check.title, blocking: check.blocking };
       try {
-        const outcome = await client.query(check.sql);
+        const outcome = await ask(check.sql);
         const verdict = check.evaluate(outcome.rows);
-        reports.push({ ...base, status: verdict.status, detail: verdict.detail });
+        collected.push({ ...base, status: verdict.status, detail: verdict.detail });
       } catch (err) {
         // A check that cannot run has proven nothing, so it counts against the proof.
-        reports.push({
+        collected.push({
           ...base,
           status: 'fail',
           detail: `check could not run: ${err instanceof Error ? err.message : String(err)}`,
         });
       }
     }
-  } finally {
-    try {
-      await client.query(ROLLBACK);
-      rolledBack = true;
-    } catch {
-      rolledBack = false;
-    }
-    client.release(!rolledBack);
-  }
+    return collected;
+  });
 
   const blockers = reports
     .filter((r) => r.blocking && r.status !== 'pass')

@@ -11,5 +11,6 @@ Chapters appear as the corresponding code lands. There is deliberately no outlin
 | 03 | [Deciding whether SQL is safe](./03-parsing-sql-safely.md) | why regex loses, real grammar parsing, allowlist vs denylist, the three layers, deparse round-trip |
 | 04 | [Measuring a system that guesses](./04-measuring-a-system-that-guesses.md) | why the eval comes before the planner, two adversarial surfaces, multiset comparison and the transitivity trap, three-state outcomes, why a spend cap needs bounded concurrency, safety vs fidelity |
 | 05 | [Turning a claim about text into a claim about the database](./05-making-a-guarantee-real.md) | capabilities vs conventions, unforgeable brands, the sealed read-only transaction, why it never commits, fail-closed interpolation, proving isolation from the catalog |
+| 06 | [Telling a model what it may look at](./06-telling-a-model-what-it-may-look-at.md) | why a schema is information, letting Postgres answer privilege questions, column grants and foreign-key disclosure, `conkey` vs `indkey`, testing SQL you cannot run, detecting truncation |
 
 Decisions with a real alternative are recorded separately in [../adr](../adr).
