@@ -8,6 +8,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./pg": {
+      "types": "./dist/pg.d.ts",
+      "default": "./dist/pg.js"
     }
   },
   "files": [
@@ -16,9 +20,22 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "smoke": "node scripts/smoke-pg.mjs",
     "test": "vitest run"
   },
   "dependencies": {
     "@insightkit/sql-guard": "workspace:*"
+  },
+  "peerDependencies": {
+    "pg": "^8.11.0"
+  },
+  "peerDependenciesMeta": {
+    "pg": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "pg": "^8.23.0"
   }
 }
