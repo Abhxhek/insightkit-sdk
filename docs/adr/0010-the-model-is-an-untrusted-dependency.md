@@ -44,7 +44,7 @@ So configuration is required, and the error when it is missing does the teaching
 
 Nothing works until the developer configures a provider. That is the intended trade.
 
-Three adapters means three API surfaces to keep current. The interface is narrow — one method — specifically to keep that cost near the cost of the HTTP call itself.
+Every adapter is another API surface to keep current. The interface is narrow — one method — specifically to keep that cost near the cost of the HTTP call itself.
 
 The customer's **schema** travels to a third party in the prompt. Table names, column names, comments. For customers who cannot allow that, a local-model adapter is not a nicety but the difference between adopting and not. It is also, incidentally, the honest answer to "can it be free": local models cost nothing and need no key.
 
@@ -55,6 +55,28 @@ Once the planner exists and the corpus can run, model choice stops being an opin
 The first version called the SDK's `messages.parse()` helper, which parses the response and *then* returns it. On a truncated reply the JSON is invalid, so the helper threw before `stop_reason` could be read — and the thrown error was a generic transport failure, which our own classification marks **retryable**. A truncated answer would have been retried until it truncated again, with nothing in the error to say why.
 
 The adapter now calls `messages.create()` and does the JSON step itself, after the stop-reason checks. Ordering was worth more than the one `JSON.parse` the helper saved. A test pins it.
+
+## The second adapter, and what it was for
+
+Anthropic and OpenAI are both implemented; Grok and a local-model adapter are deliberately not.
+
+Two providers rather than one is the point. An interface with a single implementation is indistinguishable from that implementation, and would have drifted Anthropic-shaped without anyone noticing. A **conformance suite** now runs the same assertions against both — same contract for truncation, refusal, unparseable output, failure classification, credential redaction and construction errors — so a difference between providers has to be reconciled in the adapter rather than leaking into the planner.
+
+It also mapped where the providers genuinely differ:
+
+| | Anthropic | OpenAI |
+|---|---|---|
+| Structured output | `output_config.format` | `response_format.json_schema` with `strict` |
+| Truncation | `stop_reason: "max_tokens"` | `finish_reason: "length"` |
+| Refusal | `stop_reason: "refusal"` + category | `message.refusal` string, or `finish_reason: "content_filter"` |
+| Cache accounting | reads *and* writes reported | reads only; writes are not reported |
+| System prompt | a top-level field | the first message |
+
+Only the last two rows reach the interface at all, and both are absorbed: an unreported cache-write count is zero, and a system prompt is a field on the request either way.
+
+Both SDKs also share the ordering hazard described above — each ships a `parse` helper that raises before the stop reason can be read — so both adapters call `create` and do the JSON step themselves.
+
+**Peer ranges claim only what was tested.** The first version declared `@anthropic-ai/sdk >=0.70.0` while being written against 0.124: `output_config.format` does not exist in 0.70, so the range promised compatibility that could not hold. Ranges are now floored at the version actually exercised.
 
 ## Alternatives rejected
 

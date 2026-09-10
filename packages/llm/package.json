@@ -12,6 +12,10 @@
     "./anthropic": {
       "types": "./dist/anthropic.d.ts",
       "default": "./dist/anthropic.js"
+    },
+    "./openai": {
+      "types": "./dist/openai.d.ts",
+      "default": "./dist/openai.js"
     }
   },
   "files": [
@@ -23,14 +27,19 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@anthropic-ai/sdk": ">=0.70.0"
+    "@anthropic-ai/sdk": ">=0.124.0",
+    "openai": ">=7.0.0"
   },
   "peerDependenciesMeta": {
     "@anthropic-ai/sdk": {
       "optional": true
+    },
+    "openai": {
+      "optional": true
     }
   },
   "devDependencies": {
-    "@anthropic-ai/sdk": "^0.124.0"
+    "@anthropic-ai/sdk": "^0.124.0",
+    "openai": "^7.13.0"
   }
 }
