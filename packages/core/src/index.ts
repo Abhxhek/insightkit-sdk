@@ -25,10 +25,36 @@ export type {
   TableInfo,
   TableKind,
 } from './introspect/types.js';
+export type { PlanDeps } from './plan/planner.js';
+export { isAttackShaped, isRepairable, planQuery } from './plan/planner.js';
+export type { PromptOptions } from './plan/prompt.js';
+export { repairTurn, systemPrompt } from './plan/prompt.js';
+export type {
+  ModelCompletion,
+  ModelMessage,
+  ModelProvider,
+  ModelRequest,
+  ModelUsage,
+} from './plan/provider.js';
+export { failureKind } from './plan/provider.js';
 export type { RenderOptions } from './plan/render.js';
 export { estimateTokens, renderDatabase, renderSchema, tableKey } from './plan/render.js';
 export type { RetrieveOptions, Selection } from './plan/retrieve.js';
 export { selectTables, terms } from './plan/retrieve.js';
+export type { PlanDraft } from './plan/schema.js';
+export { PLAN_SCHEMA, readPlan } from './plan/schema.js';
+export type {
+  AttemptOutcome,
+  ChartKind,
+  ChartSpec,
+  Plan,
+  PlanAttempt,
+  PlanFailure,
+  PlanOptions,
+  PlanResult,
+  SecurityEvent,
+} from './plan/types.js';
+export { CHART_KINDS } from './plan/types.js';
 export type { ProvisionConfig, ProvisionScript } from './provision.js';
 export { provisioningScript } from './provision.js';
 export type { Ask } from './session.js';
