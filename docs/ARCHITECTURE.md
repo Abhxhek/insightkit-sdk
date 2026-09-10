@@ -116,11 +116,25 @@ Core is where G1 stops being a claim about SQL text and becomes a claim about th
 10. **Introspection describes what the reader can see.** Every catalog query filters on `has_schema_privilege` / `has_table_privilege` / `has_column_privilege`, both ends of a foreign key are checked, and the metadata schema is excluded. Describing a withheld table puts its name and columns into a prompt, which is a disclosure even though no row leaks. Keys come from `pg_constraint.conkey` (a real `int2[]`) rather than `pg_index.indkey`. Results are capped, and each query selects one row past the cap so truncation is observed rather than inferred. See ADR 0008.
 11. **Retrieval is lexical and deterministic, for now.** The schema reaches a prompt as Postgres DDL with comments and row estimates kept, and a foreign key is rendered only when both tables are present. Tables are scored by token overlap with the question, a match pulls in its foreign key neighbours so a join is expressible, and `matched: false` is reported rather than a fallback being passed off as a hit. The token budget is checked by rendering the candidate set, not by estimating from metadata. Vocabulary mismatch (`monthly recurring revenue` vs `mrr_cents`) is a known gap and belongs to the semantic layer. See ADR 0009.
 
+## Talking to a model (`packages/llm`)
+
+The first component that leaves the machine, and the first whose output is unreliable rather than merely untrusted.
+
+1. **The developer supplies provider, model and key. We never ship one.** A free tier still needs a key, so a "free default" means either our key in a public repo or no saving at all. Worse, a weak default model returns a plausible *wrong number* rather than an error, which is unrecoverable for an analytics product. Configuration is required and the missing-config error does the teaching. See ADR 0010.
+2. **Two adapters, not one.** Anthropic and OpenAI. An interface with a single implementation is indistinguishable from that implementation; a conformance suite runs the same contract against both so a provider difference is reconciled in the adapter rather than leaking upward. Peer dependency ranges are floored at the version actually tested — the first attempt claimed `>=0.70.0` for an API that only exists from 0.124.
+3. **`llm` knows nothing about SQL.** It sends messages and returns an object; the planner lives in `core`. Enforced by `llm-never-touches-guard`, which was verified to fire.
+4. **The interface promises a shape, the adapter chooses the mechanism.** Anthropic uses `output_config.format`; another provider may use tool calling or JSON mode. The caller validates the result regardless, because a provider's guarantee is not one we made.
+5. **Three replies are errors, not answers:** `max_tokens` (a truncated statement can still be valid syntax), `refusal` (HTTP 200 with no content, which reads as an empty answer), and unparseable text.
+6. **`stop_reason` is checked before the body is parsed.** The SDK's `messages.parse()` helper throws on invalid JSON first, which turned a truncation into a *retryable* transport error. We call `messages.create()` and do the JSON step ourselves.
+7. **Failures are typed and carry `retryable`.** Retrying a truncation produces another truncation.
+8. **Credentials never reach anything we surface.** Provider error objects are never attached, and every message we emit is passed through key redaction.
+9. **Usage is reported on every call**, so the eval spend cap has something to meter.
+
 ## State
 
 `sql-guard` (security kernel), `eval` (release gate) and `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, schema rendering and retrieval) are built and green. Nothing is published to npm.
 
-Not started: `protocol`, `llm`, `server`, `react`, `cli`.
+Not started: `protocol`, `server`, `react`, `cli`. `llm` has the provider interface with Anthropic and OpenAI adapters; no planner uses it yet.
 
 **Nothing has run against a real Postgres.** Core is tested against a recording fake and, for the adapter, against node-postgres' own `Result` parser — which proves what we send, what we refuse, and how the driver converts, but not how a server responds. `pnpm --filter @insightkit/core smoke` turns the outstanding claims into observations against a live database; it is the first thing to run once one exists. Testcontainers e2e remains the highest-value work.
 
