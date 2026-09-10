@@ -1,0 +1,36 @@
+{
+  "name": "@insightkit/llm",
+  "version": "0.0.0",
+  "description": "Model provider adapters. Sends messages, gets a structured object back. Knows nothing about SQL, schemas or databases, and cannot reach the guard or a connection.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./anthropic": {
+      "types": "./dist/anthropic.d.ts",
+      "default": "./dist/anthropic.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.70.0"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.124.0"
+  }
+}
