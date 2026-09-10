@@ -41,7 +41,7 @@ packages/
 |---|---|---|
 | `sql-guard` | `pgsql-parser` and nothing else | `pg`, `node:*`, any `@insightkit/*` |
 | `protocol` | `zod` | anything server-side |
-| `core` | `protocol`, `sql-guard`, `llm`, `pg` | `react` |
+| `core` | `protocol`, `sql-guard`, `pg` | `react`, **`llm`** |
 | `llm` | `protocol` | `pg`, `sql-guard` |
 | `react` | `protocol` | **`core`** |
 | `server` | `core`, `protocol` | `react` |
@@ -50,6 +50,7 @@ packages/
 Two rows carry real weight:
 
 - **`react` must never reach `core`.** One `import { Engine } from '@insightkit/core'` in a Next.js client component ships the database URL into the browser bundle. Defended three ways: `server-only` in `core`'s entrypoint, an `exports` map with no mixed root barrel, and a CI rule.
+- **`core` must never reach `llm` either.** It declares the provider shape structurally, as it does for `pg`, so reaching a model costs no dependency and any client satisfying the shape works.
 - **`llm` must never reach `sql-guard`.** The code that talks to an untrusted model does not sit next to the code that decides what is trusted. Model output crosses that gap as a string and returns as a verdict.
 
 ### Kernel rules (`packages/sql-guard`)
@@ -130,11 +131,24 @@ The first component that leaves the machine, and the first whose output is unrel
 8. **Credentials never reach anything we surface.** Provider error objects are never attached, and every message we emit is passed through key redaction.
 9. **Usage is reported on every call**, so the eval spend cap has something to meter.
 
+## The planner (`packages/core/src/plan`)
+
+Where a question becomes SQL. The first component whose quality is a measurement rather than a proof.
+
+1. **Repair honest mistakes, never attacks.** A guard denial is fed back to the model only when it is the kind a mistake produces — a parse error, a function off the allowlist, an unsupported construct. `E_NOT_SELECT`, `E_MULTI_STATEMENT` and `E_NUL_BYTE` stop immediately. Not for safety, since every attempt ends at the guard either way, but because repairing an attack hands the attacker an automated loop against the validator on the host's token budget. Two attempts by default. See ADR 0011.
+2. **An attack-shaped denial is a security event.** Reported through `onSecurityEvent` with the question, the rejected SQL and the code, so a host can log or rate-limit. The callback is wrapped: a host logger that throws must not fail the request it reports on.
+3. **A repair turn carries our verdict, never the user's text**, so a rejection cannot become a second delivery route for an injected instruction.
+4. **`answerable: false` is a first-class outcome.** Without it, a model asked something the schema cannot answer invents a query and returns a confident wrong chart. `answerable: true` with no SQL is an invalid plan, not a refusal — those are different things and conflating them tells the user something untrue.
+5. **The question is a user turn, never part of the instructions.** Hygiene, not defence; the guard is what stops an injected write.
+6. **The plan schema is flat, every field required, nulls where inapplicable.** Strict structured outputs reject optional properties and providers disagree most about nullable nested objects.
+7. **`core` declares `ModelProvider` structurally** rather than importing `@insightkit/llm`, for the same reason `SqlClient` is not imported from `pg`. Provider errors are duck-typed on `kind`. A test asserts a real adapter still satisfies the shape.
+8. **Every attempt is recorded** — SQL, outcome, deny code, tokens — so a poor eval score is attributable rather than merely disappointing.
+
 ## State
 
 `sql-guard` (security kernel), `eval` (release gate) and `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, schema rendering and retrieval) are built and green. Nothing is published to npm.
 
-Not started: `protocol`, `server`, `react`, `cli`. `llm` has the provider interface with Anthropic and OpenAI adapters; no planner uses it yet.
+Not started: `protocol`, `server`, `react`, `cli`. `llm` has the provider interface with Anthropic and OpenAI adapters. The planner is built and wired to the guard, but has never run against a real model or database, so its accuracy is unmeasured.
 
 **Nothing has run against a real Postgres.** Core is tested against a recording fake and, for the adapter, against node-postgres' own `Result` parser — which proves what we send, what we refuse, and how the driver converts, but not how a server responds. `pnpm --filter @insightkit/core smoke` turns the outstanding claims into observations against a live database; it is the first thing to run once one exists. Testcontainers e2e remains the highest-value work.
 

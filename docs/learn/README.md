@@ -14,5 +14,6 @@ Chapters appear as the corresponding code lands. There is deliberately no outlin
 | 06 | [Telling a model what it may look at](./06-telling-a-model-what-it-may-look-at.md) | why a schema is information, letting Postgres answer privilege questions, column grants and foreign-key disclosure, `conkey` vs `indkey`, testing SQL you cannot run, detecting truncation |
 | 07 | [Choosing what goes in the prompt](./07-choosing-what-goes-in-the-prompt.md) | why more context is worse, DDL as the prompt format, lexical scoring and symmetric stemming, foreign-key expansion, measuring a token budget by rendering, why not embeddings yet |
 | 08 | [A dependency that lies](./08-a-dependency-that-lies.md) | who supplies the API key and why there is no free default, keeping the model away from the trust decision, truncation and refusal as errors, why a convenience helper decided a dangerous ordering, typed retryable failures, handling somebody else's credential |
+| 09 | [The part that guesses](./09-the-part-that-guesses.md) | why answerable is a feature, why retrying is safe but repairing an attack is not, the two kinds of denial, a security event as a callback, the rule that had never fired, what the machinery working does not prove |
 
 Decisions with a real alternative are recorded separately in [../adr](../adr).

@@ -35,6 +35,7 @@
     }
   },
   "devDependencies": {
+    "@insightkit/llm": "workspace:*",
     "@types/pg": "^8.11.10",
     "pg": "^8.23.0",
     "pgsql-parser": "^18.2.6"
