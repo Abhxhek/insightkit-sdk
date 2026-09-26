@@ -1,0 +1,38 @@
+{
+  "name": "@insightkit/cli",
+  "version": "0.0.0",
+  "description": "ik init | doctor | introspect. A thin front end over the provisioning script and the isolation proofs core already exposes.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "ik": "./dist/bin.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@insightkit/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "pg": "^8.11.0"
+  },
+  "peerDependenciesMeta": {
+    "pg": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.10",
+    "pg": "^8.23.0"
+  }
+}

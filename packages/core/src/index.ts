@@ -2,13 +2,31 @@ export { approve, isGuardedQuery } from './approve.js';
 export type { RoleNames } from './doctor/checks.js';
 export { isolationChecks } from './doctor/checks.js';
 export { proveIsolation } from './doctor/run.js';
+export type { ScopedReadOptions, SessionSetting } from './execute.js';
 export {
   ASSERT_READ_ONLY,
+  assertSettingName,
+  assertSettingValue,
   BEGIN_READ_ONLY,
   ROLLBACK,
   runGuardedRead,
   sessionPreamble,
+  setLocal,
 } from './execute.js';
+export type { IdentityErrorCode, IdentityFailure } from './identity/errors.js';
+export { IdentityError, identityFailure, isIdentityError } from './identity/errors.js';
+export type { ScopeResolver, ScopeResolverConfig } from './identity/resolve.js';
+export { createScopeResolver } from './identity/resolve.js';
+export type { ScopeClaim, ScopeConfig, TenantScope } from './identity/scope.js';
+export { DEFAULT_TENANT_SETTING, tenantScope } from './identity/scope.js';
+export type {
+  JwtAlgorithm,
+  TokenVerifier,
+  TokenVerifierConfig,
+  VerificationKey,
+  VerifiedToken,
+} from './identity/verify.js';
+export { createTokenVerifier, JWT_ALGORITHMS } from './identity/verify.js';
 export type { IntrospectionQueries } from './introspect/queries.js';
 export {
   DEFAULT_MAX_COLUMNS,
@@ -57,6 +75,27 @@ export type {
 export { CHART_KINDS } from './plan/types.js';
 export type { ProvisionConfig, ProvisionScript } from './provision.js';
 export { provisioningScript } from './provision.js';
+export { expandQuestion } from './semantic/expand.js';
+export { fragmentIssues } from './semantic/fragment.js';
+export { defineGlossary, GLOSSARY_DEFAULTS } from './semantic/glossary.js';
+export { renderGlossary } from './semantic/render.js';
+export type {
+  ExpandOptions,
+  Expansion,
+  FragmentIssue,
+  FragmentProblemCode,
+  Glossary,
+  GlossaryEntry,
+  GlossaryMatch,
+  GlossaryProblem,
+  GlossaryProblemCode,
+  GlossaryRef,
+  GlossaryRenderOptions,
+  GlossaryReport,
+  GlossarySection,
+  GlossaryValidateOptions,
+} from './semantic/types.js';
+export { validateGlossary } from './semantic/validate.js';
 export type { Ask } from './session.js';
 export { inReadOnlyTransaction } from './session.js';
 export { asAdminSource, asReaderSource, isAdminSource, isReaderSource } from './source.js';

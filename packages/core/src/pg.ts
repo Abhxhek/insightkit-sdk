@@ -41,9 +41,16 @@ const asText = (raw: string): string => raw;
  * precision the scalar parser is careful to keep. Postgres already sent an unambiguous
  * string, so we keep it and let the presentation layer, which knows the viewer's
  * timezone, do the converting.
+ *
+ * float4/float8 are here for a different reason: Postgres holds NaN and +/-Infinity in
+ * them legitimately, node-postgres returns those as JS non-finite numbers, and
+ * JSON.stringify rewrites all three to null -- indistinguishable from no data. Sending
+ * the text keeps a float consistent with numeric and int8, which already arrive as
+ * strings, rather than making a column change type from row to row.
  */
 const TEXT_OIDS: ReadonlySet<number> = new Set([
-  17, 1001, 1082, 1182, 1083, 1183, 1114, 1115, 1184, 1185, 1186, 1187, 1266, 1270, 1231,
+  17, 1001, 1082, 1182, 1083, 1183, 1114, 1115, 1184, 1185, 1186, 1187, 1266, 1270, 1231, 700, 1021, 701,
+  1022,
 ]);
 
 export const FIDELITY_TYPES: PgTypeRegistry = {

@@ -215,3 +215,25 @@ describe('through the whole reader path', () => {
     expect(result.rows.rows[0]?.[0]).toBe('2026-09-05');
   });
 });
+
+describe('non-finite floats, which JSON turns into null', () => {
+  it('keeps NaN and the infinities as the text Postgres sent', async () => {
+    for (const raw of ['NaN', 'Infinity', '-Infinity']) {
+      const { outcome } = await one([{ name: 'v', oid: 701 }], [[raw]]);
+      expect(outcome.rows[0]?.[0], raw).toBe(raw);
+      expect(JSON.parse(JSON.stringify(outcome.rows))[0][0], raw).toBe(raw);
+    }
+  });
+
+  it('keeps an ordinary float exact rather than rounding it through a number', async () => {
+    const { outcome } = await one([{ name: 'v', oid: 701 }], [['0.30000000000000004']]);
+    expect(outcome.rows[0]?.[0]).toBe('0.30000000000000004');
+  });
+
+  it('does the same for float4 and for arrays of either', async () => {
+    for (const oid of [700, 1021, 1022]) {
+      const { outcome } = await one([{ name: 'v', oid }], [['{NaN}']]);
+      expect(String(outcome.rows[0]?.[0]), String(oid)).toContain('NaN');
+    }
+  });
+});

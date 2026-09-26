@@ -44,6 +44,7 @@ packages/
 | `core` | `protocol`, `sql-guard`, `pg` | `react`, **`llm`** |
 | `llm` | `protocol` | `pg`, `sql-guard` |
 | `react` | `protocol` | **`core`** |
+| `cli` | `core`, `protocol`, `pg`, `node:*` | `react`; and nothing may import `cli` |
 | `server` | `core`, `protocol` | `react` |
 | `eval` | `sql-guard`, the public API of what it scores | `pg`, `node:*` in `src`; nothing may import `eval` |
 
@@ -144,12 +145,24 @@ Where a question becomes SQL. The first component whose quality is a measurement
 7. **`core` declares `ModelProvider` structurally** rather than importing `@insightkit/llm`, for the same reason `SqlClient` is not imported from `pg`. Provider errors are duck-typed on `kind`. A test asserts a real adapter still satisfies the shape.
 8. **Every attempt is recorded** — SQL, outcome, deny code, tokens — so a poor eval score is attributable rather than merely disappointing.
 
+## What crosses a boundary (`protocol`, `identity`, `semantic`, `cli`)
+
+Four surfaces where information leaves our hands. Each is decided by what must *not* go.
+
+1. **The wire is a narrowing, not a re-export.** A browser never receives a deny code, a token count, an attempt history, or the SQL unless the host opts in. `E_NOT_SELECT` reaching a client tells an attacker their probe was detected *and classified*. Objects are strict rather than stripping, because stripping protects the receiving end after the JSON already crossed — strict protects the **sending** end, turning a leak into a 500. See ADR 0012.
+2. **Tenant isolation is Postgres's job.** We do not rewrite SQL for tenancy: a predicate must hold on every relation reference including subqueries, CTEs and UNION arms, and missing one is silent cross-tenant disclosure. A verified JWT becomes `SET LOCAL app.tenant_id` and RLS enforces it. See ADR 0013.
+3. **`jose`'s defaults are not safe** — verified by running it. A token with no `exp` verifies; a 5-byte HS secret signs and verifies; `createRemoteJWKSet` accepts `http://`. All three are rejected at config time, and the algorithm allowlist is never taken from the token header.
+4. **A session setting name must be `prefix.name`.** The dot is mandatory: an unprefixed name is a built-in GUC, so without that rule a scope setting could target `row_security` or `search_path` and undo the preamble it travels with.
+5. **A glossary is a disclosure surface, not a trust boundary.** A SQL fragment is never parsed or executed — the model reads it and the guard validates what comes back — but it can name a column introspection withheld. Containment is proved by composition: refs ⊆ schema and fragment ⊆ refs, so no expression parser is needed. See ADR 0014.
+6. **A wrong glossary entry is worse than no entry.** A definition in a prompt is more authoritative to a model than silence, so startup validation is the only thing between a typo and confidently wrong answers.
+7. **Scrollback is forever.** The CLI takes its connection URL from the environment and has no `--database-url` flag, because argv is visible in `ps` and lands in shell history. Two redactors, not one: aggressive for error text, exact-literal for anything read back from the database, so a table named `token_expires_audit` is not rewritten. `ik doctor`'s exit code is the product.
+
 ## State
 
-`sql-guard` (security kernel), `eval` (release gate) and `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, schema rendering and retrieval) are built and green. Nothing is published to npm.
+`sql-guard` (security kernel), `eval` (release gate), `llm` (provider adapters), `protocol` (wire contract), `cli` (`ik init | doctor | introspect`) and `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, retrieval, planner, tenant identity, semantic layer) are built and green. Nothing is published to npm.
 
-Not started: `protocol`, `server`, `react`, `cli`. `llm` has the provider interface with Anthropic and OpenAI adapters. The planner is built and wired to the guard, but has never run against a real model or database, so its accuracy is unmeasured.
+Not started: `server`, `react`, realtime, the approved-query store. The planner is wired to the guard but has never run against a real model or database, so its accuracy is unmeasured. The semantic layer and tenant scoping are built but **not wired into the planner or the reader path** — that is the integration `server` will own, and it is where the largest remaining fail-open lives: `runGuardedRead` with no scope still runs unscoped.
 
 **Nothing has run against a real Postgres.** Core is tested against a recording fake and, for the adapter, against node-postgres' own `Result` parser — which proves what we send, what we refuse, and how the driver converts, but not how a server responds. `pnpm --filter @insightkit/core smoke` turns the outstanding claims into observations against a live database; it is the first thing to run once one exists. Testcontainers e2e remains the highest-value work.
 
-Still asserted open in the eval corpus: `column-policy` (T4-S01), `tenant-scoping` (T4-S02), `cost-ceiling` (T4-S04), `planner-hardening` (T4-S05/S06).
+Still asserted open in the eval corpus: `column-policy` (T4-S01), `tenant-scoping` (T4-S02), `cost-ceiling` (T4-S04), `planner-hardening` (T4-S05/S06). `tenant-scoping` now has machinery behind it, but the corpus case stays open until the reader path *requires* a scope rather than merely accepting one.

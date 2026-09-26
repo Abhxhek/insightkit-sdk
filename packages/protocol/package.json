@@ -1,0 +1,24 @@
+{
+  "name": "@insightkit/protocol",
+  "version": "0.0.0",
+  "description": "The wire contract between browser and server. Deliberately narrower than what the server knows: a deny code, a token count or a SQL string must not cross to a client unless the host opts in.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.6.5"
+  }
+}

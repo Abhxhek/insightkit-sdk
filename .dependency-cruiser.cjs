@@ -45,7 +45,7 @@ module.exports = {
       severity: 'error',
       comment: 'protocol is shared by browser and server. It must run in both.',
       from: { path: '^packages/protocol/src' },
-      to: { path: '^(node:)?(fs|net|http|https|child_process|tls|dns)(/|$)|^pg(-|$)|^packages/' },
+      to: { path: '^(node:)?(fs|net|http|https|child_process|tls|dns)(/|$)|^pg(-|$)|^packages/(?!protocol/)' },
     },
     {
       name: 'eval-measures-the-shipped-system',
@@ -83,6 +83,29 @@ module.exports = {
       comment: 'core holds connection material. It must not be importable from anything that ships to a browser bundle.',
       from: { path: '^packages/core/src' },
       to: { path: '^packages/(react|llm)/' },
+    },
+    {
+      name: 'nothing-imports-the-cli',
+      severity: 'error',
+      comment:
+        'The CLI is a leaf. It is a front end over core for a human at a terminal, never a library another package builds on.',
+      from: { path: '^packages/(?!cli/)' },
+      to: { path: '^packages/cli/' },
+    },
+    {
+      name: 'cli-never-reaches-the-browser',
+      severity: 'error',
+      comment: 'The CLI holds connection material and runs on a developer machine. It has no business in a bundle.',
+      from: { path: '^packages/cli/src' },
+      to: { path: '^packages/react/' },
+    },
+    {
+      name: 'identity-is-not-the-guard',
+      severity: 'error',
+      comment:
+        'Token verification decides who is asking. It must not also be able to decide what SQL is safe, which is a separate package and a separate review gate.',
+      from: { path: '^packages/core/src/identity' },
+      to: { path: '^packages/core/src/plan/|^packages/sql-guard/' },
     },
     {
       name: 'no-circular',
