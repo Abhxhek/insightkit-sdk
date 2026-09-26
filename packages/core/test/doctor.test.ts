@@ -1,3 +1,4 @@
+import { loadModule, parse } from 'pgsql-parser';
 import { describe, expect, it } from 'vitest';
 import { isolationChecks } from '../src/doctor/checks.js';
 import { proveIsolation } from '../src/doctor/run.js';
@@ -5,11 +6,15 @@ import type { Check, QueryOutcome, SqlClient } from '../src/types.js';
 
 const ROLES = { reader: 'ik_reader', login: 'ik_sdk', metadataSchema: 'insightkit' };
 const checks = isolationChecks(ROLES);
-const byId = (id: string): Check => {
-  const c = checks.find((x) => x.id === id);
+const scopedChecks = isolationChecks({ ...ROLES, tenantScoping: true });
+
+const pick = (from: readonly Check[], id: string): Check => {
+  const c = from.find((x) => x.id === id);
   if (c === undefined) throw new Error(`no check ${id}`);
   return c;
 };
+const byId = (id: string): Check => pick(checks, id);
+const scoped = (id: string): Check => pick(scopedChecks, id);
 
 const outcome = (rows: unknown[][]): QueryOutcome => ({ fields: [], rows });
 
@@ -78,6 +83,54 @@ describe('individual checks', () => {
     for (const c of checks.filter((x) => x.id.startsWith('A'))) expect(c.blocking).toBe(true);
   });
 
+  it('A3 already covers BYPASSRLS, so no separate check duplicates it', () => {
+    expect(byId('A3').sql).toContain('rolbypassrls');
+    expect(byId('A3').evaluate([['ik_reader', false, false, false, false, true]]).status).toBe('fail');
+    expect(checks.filter((c) => c.sql.includes('rolbypassrls'))).toHaveLength(1);
+  });
+
+  it('T1 fails when a table the reader can read has row security off', () => {
+    const mixed = [
+      ['public', 'users', true],
+      ['public', 'orders', false],
+    ];
+    const bad = scoped('T1').evaluate(mixed);
+    expect(bad.status).toBe('fail');
+    expect(bad.detail).toContain('orders');
+    expect(scoped('T1').evaluate([['public', 'users', true]]).status).toBe('pass');
+  });
+
+  it('T1 does not pass vacuously when the reader can read nothing', () => {
+    const empty = scoped('T1').evaluate([]);
+    expect(empty.status).toBe('fail');
+    expect(empty.detail).toContain('unproven');
+  });
+
+  it('T1 reports for review instead of failing when tenant scoping is not configured', () => {
+    expect(byId('T1').blocking).toBe(false);
+    expect(byId('T1').evaluate([['public', 'users', false]]).status).toBe('review');
+    expect(scoped('T1').blocking).toBe(true);
+  });
+
+  it('T2 fails only where the reader owns a table that does not force row security', () => {
+    expect(scoped('T2').evaluate([]).status).toBe('pass');
+    const owned = scoped('T2').evaluate([['public', 'users', 'ik_sdk']]);
+    expect(owned.status).toBe('fail');
+    expect(owned.detail).toContain('FORCE ROW LEVEL SECURITY');
+    expect(scoped('T2').sql).toContain('relforcerowsecurity');
+  });
+
+  it('T3 and T4 report for review and never block, whatever the scoping flag', () => {
+    expect(scoped('T3').evaluate([['public', 'users']]).status).toBe('review');
+    expect(scoped('T4').evaluate([['public', 'users', 'everything']]).status).toBe('review');
+    for (const id of ['T3', 'T4']) {
+      expect(byId(id).blocking).toBe(false);
+      expect(scoped(id).blocking).toBe(false);
+    }
+    expect(scoped('T3').evaluate([]).status).toBe('pass');
+    expect(scoped('T4').evaluate([]).status).toBe('pass');
+  });
+
   it('refuses to build checks around a role name that is not an identifier', () => {
     expect(() => isolationChecks({ ...ROLES, login: "x'; DROP TABLE users --" })).toThrow(
       /plain SQL identifier/,
@@ -86,8 +139,38 @@ describe('individual checks', () => {
   });
 });
 
+describe('the row security checks', () => {
+  it('are each a single well-formed postgres statement', async () => {
+    await loadModule();
+    for (const c of scopedChecks.filter((x) => x.id.startsWith('T'))) {
+      expect((await parse(c.sql)).stmts, c.id).toHaveLength(1);
+    }
+  });
+
+  it('read the catalog columns they claim to', () => {
+    expect(scoped('T1').sql).toContain('relrowsecurity');
+    expect(scoped('T2').sql).toContain('relforcerowsecurity');
+    expect(scoped('T3').sql).toContain('pg_policy');
+    expect(scoped('T4').sql).toContain('pg_get_expr(p.polqual');
+  });
+
+  it('never ask about the metadata schema or the catalog', () => {
+    for (const c of scopedChecks.filter((x) => x.id.startsWith('T') && x.id !== 'T4')) {
+      expect(c.sql).toContain("n.nspname <> 'insightkit'");
+      expect(c.sql).toContain("n.nspname NOT LIKE 'pg\\_%'");
+    }
+  });
+});
+
 describe('proveIsolation', () => {
   const clean = {
+    rls_enabled: [
+      ['public', 'users', true],
+      ['public', 'orders', true],
+    ],
+    table_owner: [],
+    policy_missing: [],
+    policy_unconditional: [],
     current_user: [['postgres']],
     table_privileges: [],
     pg_auth_members: [],
@@ -141,5 +224,46 @@ describe('proveIsolation', () => {
     const s = source(clean);
     await proveIsolation(s, checks);
     expect(s.released).toEqual([false]);
+  });
+
+  it('proves isolation with tenant scoping on when row security is enabled everywhere', async () => {
+    const proof = await proveIsolation(source(clean), scopedChecks);
+    expect(proof.proven).toBe(true);
+    expect(proof.blockers).toEqual([]);
+  });
+
+  it('blocks with tenant scoping on when a readable table has row security off', async () => {
+    const s = source({ ...clean, rls_enabled: [['public', 'users', false]] });
+    const proof = await proveIsolation(s, scopedChecks);
+    expect(proof.proven).toBe(false);
+    expect(proof.blockers.join(' ')).toContain('T1');
+  });
+
+  it('does not block the same database when tenant scoping is off', async () => {
+    const s = source({ ...clean, rls_enabled: [['public', 'users', false]] });
+    const proof = await proveIsolation(s, checks);
+    expect(proof.proven).toBe(true);
+    expect(proof.needsReview.join(' ')).toContain('T1');
+  });
+
+  it('blocks when a readable table the reader owns does not force row security', async () => {
+    const s = source({ ...clean, table_owner: [['public', 'users', 'ik_sdk']] });
+    const proof = await proveIsolation(s, scopedChecks);
+    expect(proof.proven).toBe(false);
+    expect(proof.blockers.join(' ')).toContain('T2');
+  });
+
+  it('reports an unconditional policy for review without failing the proof', async () => {
+    const s = source({ ...clean, policy_unconditional: [['public', 'users', 'everything']] });
+    const proof = await proveIsolation(s, scopedChecks);
+    expect(proof.proven).toBe(true);
+    expect(proof.needsReview.join(' ')).toContain('T4');
+  });
+
+  it('does not treat an RLS check it could not run as a pass', async () => {
+    const s = source(clean, 'rls_enabled');
+    const proof = await proveIsolation(s, scopedChecks);
+    expect(proof.proven).toBe(false);
+    expect(proof.blockers.join(' ')).toContain('could not run');
   });
 });

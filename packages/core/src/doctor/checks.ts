@@ -5,6 +5,8 @@ export interface RoleNames {
   readonly reader: string;
   readonly login: string;
   readonly metadataSchema: string;
+  /** Turns the T checks from advisory into blocking. Set it whenever identity scoping is wired. */
+  readonly tenantScoping?: boolean;
 }
 
 const pass = (detail: string): CheckOutcome => ({ status: 'pass', detail });
@@ -24,6 +26,14 @@ export function isolationChecks(roles: RoleNames): readonly Check[] {
   const login = quoteLiteral(assertIdent(roles.login, 'login role'), 'login role');
   const meta = quoteLiteral(assertIdent(roles.metadataSchema, 'metadata schema'), 'metadata schema');
   const both = `${reader}, ${login}`;
+
+  const scoping = roles.tenantScoping === true;
+  const gap = scoping ? fail : review;
+  const readable = `c.relkind IN ('r','p')
+  AND n.nspname <> 'information_schema' AND n.nspname NOT LIKE 'pg\\_%' AND n.nspname <> ${meta}
+  AND has_table_privilege(${login}, c.oid, 'SELECT')`;
+  const appliesToReader = `(0 = ANY (p.polroles)
+       OR EXISTS (SELECT 1 FROM unnest(p.polroles) AS pr WHERE pg_has_role(${login}, pr, 'USAGE')))`;
 
   return [
     {
@@ -87,6 +97,83 @@ FROM pg_roles WHERE rolname IN (${both})`,
         rows[0]?.[0] === true
           ? fail(`${roles.login} has USAGE on ${roles.metadataSchema}`)
           : pass('metadata schema not reachable by the reader'),
+    },
+    {
+      id: 'T1',
+      title: 'row security is enabled on every table the reader can select from',
+      blocking: scoping,
+      sql: `SELECT n.nspname, c.relname, c.relrowsecurity AS rls_enabled
+FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE ${readable}
+ORDER BY 1, 2`,
+      evaluate: (rows) => {
+        if (rows.length === 0) {
+          return gap('the reader can select from no table, so row security coverage is unproven');
+        }
+        const off = rows.filter((r) => r[2] !== true);
+        return off.length === 0
+          ? pass(`${rows.length} readable table(s), all with row security enabled`)
+          : gap(
+              `${off.length} of ${rows.length} readable table(s) have row security off, where scoping does nothing: ${describe(off)}`,
+            );
+      },
+    },
+    {
+      id: 'T2',
+      title: 'row security is forced on readable tables the reader owns, since an owner bypasses it',
+      blocking: scoping,
+      sql: `SELECT n.nspname, c.relname, pg_get_userbyid(c.relowner) AS table_owner
+FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE ${readable}
+  AND c.relrowsecurity AND NOT c.relforcerowsecurity
+  AND (pg_has_role(${login}, c.relowner, 'USAGE') OR pg_has_role(${reader}, c.relowner, 'USAGE'))
+ORDER BY 1, 2`,
+      evaluate: (rows) =>
+        rows.length === 0
+          ? pass('no readable table is owned by a role the reader belongs to')
+          : gap(
+              `${rows.length} table(s) the reader owns without FORCE ROW LEVEL SECURITY: ${describe(rows)}`,
+            ),
+    },
+    {
+      id: 'T3',
+      title: 'tables with row security on but no SELECT policy reaching the reader',
+      blocking: false,
+      sql: `SELECT n.nspname, c.relname AS policy_missing
+FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE ${readable}
+  AND c.relrowsecurity
+  AND NOT EXISTS (
+    SELECT 1 FROM pg_policy p
+    WHERE p.polrelid = c.oid AND p.polcmd IN ('r','*')
+      AND ${appliesToReader})
+ORDER BY 1, 2`,
+      evaluate: (rows) =>
+        rows.length === 0
+          ? pass('every table with row security has a SELECT policy for the reader')
+          : review(
+              `${rows.length} table(s) return zero rows rather than an error, which reads as an empty answer: ${describe(rows)}`,
+            ),
+    },
+    {
+      id: 'T4',
+      title: 'SELECT policies that admit every row regardless of the session settings',
+      blocking: false,
+      sql: `SELECT n.nspname, c.relname, p.polname AS policy_unconditional
+FROM pg_policy p
+JOIN pg_class c ON c.oid = p.polrelid
+JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE has_table_privilege(${login}, c.oid, 'SELECT')
+  AND p.polcmd IN ('r','*')
+  AND ${appliesToReader}
+  AND pg_get_expr(p.polqual, p.polrelid) = 'true'
+ORDER BY 1, 2`,
+      evaluate: (rows) =>
+        rows.length === 0
+          ? pass('no unconditional SELECT policy')
+          : review(
+              `${rows.length} policy(ies) USING (true); row security is enabled but scopes nothing: ${describe(rows)}`,
+            ),
     },
     {
       id: 'B1',

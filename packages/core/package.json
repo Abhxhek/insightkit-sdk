@@ -24,7 +24,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@insightkit/sql-guard": "workspace:*"
+    "@insightkit/sql-guard": "workspace:*",
+    "jose": "^6.1.0"
   },
   "peerDependencies": {
     "pg": "^8.11.0"

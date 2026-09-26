@@ -15,5 +15,6 @@ Chapters appear as the corresponding code lands. There is deliberately no outlin
 | 07 | [Choosing what goes in the prompt](./07-choosing-what-goes-in-the-prompt.md) | why more context is worse, DDL as the prompt format, lexical scoring and symmetric stemming, foreign-key expansion, measuring a token budget by rendering, why not embeddings yet |
 | 08 | [A dependency that lies](./08-a-dependency-that-lies.md) | who supplies the API key and why there is no free default, keeping the model away from the trust decision, truncation and refusal as errors, why a convenience helper decided a dangerous ordering, typed retryable failures, handling somebody else's credential |
 | 09 | [The part that guesses](./09-the-part-that-guesses.md) | why answerable is a feature, why retrying is safe but repairing an attack is not, the two kinds of denial, a security event as a callback, the rule that had never fired, what the machinery working does not prove |
+| 10 | [What you hand to someone else](./10-what-you-hand-to-someone-else.md) | four boundaries as one problem, why strict-vs-strip protects the sending end, RLS instead of a rewriter, library defaults that are not safe, a glossary as disclosure surface, why scrollback is forever, what parallel building surfaced |
 
 Decisions with a real alternative are recorded separately in [../adr](../adr).
