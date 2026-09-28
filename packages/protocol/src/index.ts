@@ -26,4 +26,26 @@ export { CHART_KINDS, chartKindSchema, chartSpecSchema, parseChartSpec } from '.
 export type { ParseIssue, ParseResult } from './parse.js';
 export type { ResultSet } from './result.js';
 export { parseResultSet, resultSetSchema } from './result.js';
+export type {
+  StreamClosed,
+  StreamCloseReason,
+  StreamError,
+  StreamEvent,
+  StreamSnapshot,
+  SubscribeRequest,
+} from './stream.js';
+export {
+  MAX_STREAM_INTERVAL_MS,
+  MAX_STREAM_TOKEN_LENGTH,
+  MIN_STREAM_INTERVAL_MS,
+  parseStreamEvent,
+  parseSubscribeRequest,
+  STREAM_CLOSE_REASONS,
+  streamClosedSchema,
+  streamErrorSchema,
+  streamEventSchema,
+  streamSnapshotSchema,
+  streamTokenSchema,
+  subscribeRequestSchema,
+} from './stream.js';
 export { PROTOCOL_VERSION, protocolVersionOf, protocolVersionSchema } from './version.js';

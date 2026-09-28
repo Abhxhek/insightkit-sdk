@@ -53,6 +53,15 @@ export type PlanResult =
       readonly reason: PlanFailure;
       readonly detail: string;
       readonly code: DenyCode | null;
+      /**
+       * The model was shown a guard verdict before producing this, so `detail` may
+       * quote validator internals -- which function tripped the allowlist, that an
+       * allowlist exists. Repair feeds the guard's own words into the conversation,
+       * and `unanswerable` is the one failure whose detail is the model's prose, so
+       * without this a caller cannot tell contaminated prose from clean prose.
+       * Anything forwarding `detail` to a client must refuse when this is true.
+       */
+      readonly sawVerdict: boolean;
       readonly attempts: readonly PlanAttempt[];
       readonly usage: ModelUsage;
     };

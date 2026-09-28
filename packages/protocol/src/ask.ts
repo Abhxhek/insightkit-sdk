@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { chartSpecSchema } from './chart.js';
 import { type ParseResult, parseWith } from './parse.js';
 import { resultSetSchema } from './result.js';
+import { streamTokenSchema } from './stream.js';
 import { prose } from './text.js';
 import { protocolVersionSchema } from './version.js';
 
@@ -24,6 +25,8 @@ export const askOkResponseSchema = z.strictObject({
   truncated: z.boolean(),
   /** Present only when the host opts in. Customer-facing embeds leave it off. */
   sql: z.string().optional(),
+  /** Present when the host enables live updates. Opaque; the client only hands it back. */
+  stream: streamTokenSchema.optional(),
 });
 
 export const askUnanswerableResponseSchema = z.strictObject({

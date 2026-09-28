@@ -1,0 +1,25 @@
+{
+  "name": "@insightkit/server",
+  "version": "0.0.0",
+  "description": "The HTTP surface. Web-standard Request to Response, with thin adapters for Next, Express, Fastify and Hono. Where a request becomes a tenant and where an unscoped read is refused.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@insightkit/core": "workspace:*",
+    "@insightkit/protocol": "workspace:*"
+  }
+}

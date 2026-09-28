@@ -99,6 +99,30 @@ export { validateGlossary } from './semantic/validate.js';
 export type { Ask } from './session.js';
 export { inReadOnlyTransaction } from './session.js';
 export { asAdminSource, asReaderSource, isAdminSource, isReaderSource } from './source.js';
+export {
+  CACHE_KEY_VERSION,
+  cacheKey,
+  DEFAULT_PLANNER_VERSION,
+  glossaryDigest,
+  normalizeQuestion,
+  schemaDigest,
+} from './store/key.js';
+export type { AppliedMigration, Migration, MigrationOptions, MigrationReport } from './store/migrations.js';
+export { MIGRATIONS, migrationChecksum, pendingMigrations, runMigrations } from './store/migrations.js';
+export { APPROVED_QUERY_TABLE, DEFAULT_METADATA_SCHEMA, MIGRATION_TABLE } from './store/names.js';
+export type { QueryStore, QueryStoreOptions } from './store/store.js';
+export { createQueryStore, DEFAULT_MAX_ENTRY_BYTES, DEFAULT_TTL_MS } from './store/store.js';
+export type {
+  CachedPlan,
+  CacheKey,
+  CacheKeyInput,
+  RejectedEntry,
+  RejectionReason,
+  SavedPlan,
+  SavePlanInput,
+  StoreErrorCode,
+} from './store/types.js';
+export { isStoreError, StoreError } from './store/types.js';
 export type {
   AdminSource,
   Approval,
