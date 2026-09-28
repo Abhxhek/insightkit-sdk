@@ -16,5 +16,6 @@ Chapters appear as the corresponding code lands. There is deliberately no outlin
 | 08 | [A dependency that lies](./08-a-dependency-that-lies.md) | who supplies the API key and why there is no free default, keeping the model away from the trust decision, truncation and refusal as errors, why a convenience helper decided a dangerous ordering, typed retryable failures, handling somebody else's credential |
 | 09 | [The part that guesses](./09-the-part-that-guesses.md) | why answerable is a feature, why retrying is safe but repairing an attack is not, the two kinds of denial, a security event as a callback, the rule that had never fired, what the machinery working does not prove |
 | 10 | [What you hand to someone else](./10-what-you-hand-to-someone-else.md) | four boundaries as one problem, why strict-vs-strip protects the sending end, RLS instead of a rewriter, library defaults that are not safe, a glossary as disclosure surface, why scrollback is forever, what parallel building surfaced |
+| 11 | [The seams only show when you join them](./11-the-seams-only-show-when-you-join-them.md) | two correct ADRs with a hole between them, a contract two green suites both missed, when a claimed test is not a test, breaking a rule to prove it, verifying the claim rather than the conclusion |
 
 Decisions with a real alternative are recorded separately in [../adr](../adr).

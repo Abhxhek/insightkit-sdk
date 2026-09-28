@@ -45,6 +45,7 @@ export async function planQuery(
   // asking the model to disregard them is not sitting in the instruction slot.
   const messages: ModelMessage[] = [{ role: 'user', content: question }];
   const attempts: PlanAttempt[] = [];
+  let sawVerdict = false;
   let usage: ModelUsage = ZERO_USAGE;
 
   const raise = (event: SecurityEvent): void => {
@@ -61,7 +62,7 @@ export async function planQuery(
     reason: 'unanswerable' | 'rejected' | 'model_error' | 'invalid_plan',
     detail: string,
     code: DenyCode | null,
-  ): PlanResult => ({ ok: false, reason, detail, code, attempts, usage });
+  ): PlanResult => ({ ok: false, reason, detail, code, sawVerdict, attempts, usage });
 
   for (let n = 1; n <= maxAttempts; n += 1) {
     let output: unknown;
@@ -147,6 +148,9 @@ export async function planQuery(
       return fail('rejected', approval.detail, approval.code);
     }
 
+    // From here the conversation contains the guard's own words, so anything the model
+    // says next may quote them back.
+    sawVerdict = true;
     messages.push(
       { role: 'assistant', content: JSON.stringify(output) },
       { role: 'user', content: repairTurn(approval.code, approval.detail) },

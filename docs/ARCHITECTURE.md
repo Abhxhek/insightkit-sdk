@@ -45,7 +45,7 @@ packages/
 | `llm` | `protocol` | `pg`, `sql-guard` |
 | `react` | `protocol` | **`core`** |
 | `cli` | `core`, `protocol`, `pg`, `node:*` | `react`; and nothing may import `cli` |
-| `server` | `core`, `protocol` | `react` |
+| `server` | `core`, `protocol` | `react`, `sql-guard` (types reached transitively through `core`) |
 | `eval` | `sql-guard`, the public API of what it scores | `pg`, `node:*` in `src`; nothing may import `eval` |
 
 Two rows carry real weight:
@@ -157,11 +157,31 @@ Four surfaces where information leaves our hands. Each is decided by what must *
 6. **A wrong glossary entry is worse than no entry.** A definition in a prompt is more authoritative to a model than silence, so startup validation is the only thing between a typo and confidently wrong answers.
 7. **Scrollback is forever.** The CLI takes its connection URL from the environment and has no `--database-url` flag, because argv is visible in `ps` and lands in shell history. Two redactors, not one: aggressive for error text, exact-literal for anything read back from the database, so a table named `token_expires_audit` is not rewritten. `ik doctor`'s exit code is the product.
 
+## The HTTP surface and the browser (`server`, `react`)
+
+1. **An unscoped read is unreachable by omission.** `tenancy` is required with no default; the single-tenant arm demands an exact acknowledgement sentence rather than a boolean; `ReadScope` carries a runtime brand with two producers; and one function is the only caller of `runGuardedRead`, asserted by a test that greps every source file. Verified by adding a second call site and watching CI fail. See ADR 0015.
+2. **Every planner outcome answers HTTP 200.** A 422 for refused or a 502 for a model failure rebuilds the oracle ADR 0012 closed — the status line would classify the probe without the body. Non-200 is only about whether the *request* was admissible.
+3. **Security events change throttling, never status.** Answering 403 on detection is the same oracle by another route. The strike is recorded before the host callback runs, so a throwing logger cannot lose it.
+4. **Repair contaminates the model's prose.** ADR 0011 feeds the guard's detail into the conversation and ADR 0012 lets `unanswerable` carry model prose, so the guard's words can reach a browser with no branch doing anything wrong. A failed `PlanResult` now carries `sawVerdict`; the server discards prose after any denial; a test replays the two-turn script. Two correct designs, one emergent hole.
+5. **A value that will not coerce is never zero.** Numbers arrive as text (ADR 0007), so a bar is omitted rather than drawn at zero, a line breaks into segments, and a note counts what was left out. `"NaN"` is a gap, not the axis minimum. See ADR 0016.
+6. **The x axis is spaced by row position, never a parsed date.** `new Date("2026-09-05")` is UTC midnight and `new Date("2026-09-05 00:00")` is local — the off-by-one-day bug ADR 0007 exists to prevent. Index spacing cannot be wrong about a day.
+7. **Zero charting dependency**, hand-rolled SVG, and a table always present behind the visual as both the accessibility fallback and the palette's relief channel.
+8. **A contract no test names is prose.** `react` and `server` shipped mismatched endpoints with both suites green, because neither asserted a URL. There is now a test that posts through the component and names the path.
+
+## The approved-query store (`core/src/store`)
+
+1. **The first thing in this project that writes**, which is what G2 exists for. Writes go through `AdminSource`, never `ReaderSource`, and the store accepts no SQL string anywhere in its API.
+2. **A cached plan is re-approved on the way out.** The stored text is a candidate; the SQL used is the guard's re-emitted output. A tampered row therefore cannot produce unguarded SQL — the worst case is a different but still SELECT-only query, which is a wrong chart rather than a G1 breach.
+3. **Row estimates are out of the cache key.** `renderSchema` emits `-- approximately N rows`, so hashing the rendered DDL would flush the entire cache on every autovacuum without a single answer changing.
+4. **The tenant is out of the key too.** A plan is schema-shaped, not tenant-shaped; tenancy is Postgres's job. It is stored for audit only.
+5. **Migrations run only when invoked.** Creating a schema inside somebody else's production database at startup is a change their change log cannot explain.
+6. **Key encoding is injective at the primitive.** `list()` used to join elements with a NUL inside a single part, so `['a\0b']` and `['a','b']` hashed alike and the outer length prefix could not tell them apart — reachable through host-authored glossary synonyms. Fourth appearance of this bug class in the repo; first one fixed at the encoder rather than the call site.
+
 ## State
 
 `sql-guard` (security kernel), `eval` (release gate), `llm` (provider adapters), `protocol` (wire contract), `cli` (`ik init | doctor | introspect`) and `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, retrieval, planner, tenant identity, semantic layer) are built and green. Nothing is published to npm.
 
-Not started: `server`, `react`, realtime, the approved-query store. The planner is wired to the guard but has never run against a real model or database, so its accuracy is unmeasured. The semantic layer and tenant scoping are built but **not wired into the planner or the reader path** — that is the integration `server` will own, and it is where the largest remaining fail-open lives: `runGuardedRead` with no scope still runs unscoped.
+All eight packages are built. `server` wires the planner, the semantic layer, tenant scoping and the reader path together and closes the unscoped-read fail-open for its own callers; `runGuardedRead` itself still accepts no scope, so a host using `core` directly must re-invent that. The planner has never run against a real model or database, so accuracy is unmeasured.
 
 **Nothing has run against a real Postgres.** Core is tested against a recording fake and, for the adapter, against node-postgres' own `Result` parser — which proves what we send, what we refuse, and how the driver converts, but not how a server responds. `pnpm --filter @insightkit/core smoke` turns the outstanding claims into observations against a live database; it is the first thing to run once one exists. Testcontainers e2e remains the highest-value work.
 
