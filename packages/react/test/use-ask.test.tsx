@@ -263,3 +263,23 @@ describe('Insight', () => {
     expect(broken.getByRole('button', { name: 'Try again' })).toBeTruthy();
   });
 });
+
+describe('endpoint joining', () => {
+  it('trims a long run of slashes in linear time', () => {
+    // CodeQL caught /\/+$/ here, and it was genuinely quadratic rather than optimised
+    // away: 16k slashes took 89ms. A loop cannot backtrack.
+    const seen: string[] = [];
+    const spy: FetchLike = (input) => {
+      seen.push(String(input));
+      return Promise.resolve(
+        reply({ status: 'ok', protocol: PROTOCOL_VERSION, chart, data, truncated: false }),
+      );
+    };
+    // The slashes must NOT be at the end: a trailing run matches immediately and is
+    // fast. The quadratic case is a run the anchor can never reach.
+    const hostile = `/api${'/'.repeat(50_000)}x`;
+    const started = Date.now();
+    render(<Insight endpoint={hostile} question="how many" fetchImpl={spy} />);
+    expect(Date.now() - started).toBeLessThan(1000);
+  });
+});

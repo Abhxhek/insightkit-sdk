@@ -14,8 +14,18 @@ const shownAt = (at: string): string => {
   return Number.isNaN(parsed.getTime()) ? at : parsed.toLocaleTimeString();
 };
 
-/** The server routes on the last path segment, so both live under one mounted base. */
-const joined = (base: string, segment: string): string => `${base.replace(/\/+$/, '')}/${segment}`;
+const SLASH = 47;
+
+/**
+ * The server routes on the last path segment, so both live under one mounted base.
+ * Trimming with a pattern is quadratic on a run of slashes that is not at the end: the
+ * engine retries at every position and backtracks the whole run before failing.
+ */
+const joined = (base: string, segment: string): string => {
+  let end = base.length;
+  while (end > 0 && base.charCodeAt(end - 1) === SLASH) end -= 1;
+  return `${base.slice(0, end)}/${segment}`;
+};
 
 export interface InsightProps {
   /** Where the handler is mounted. `ask` and `subscribe` hang off it. */

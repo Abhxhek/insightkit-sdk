@@ -35,6 +35,21 @@ ISO-ish values are sorted lexicographically for line and area only, and only whe
 
 **A single row downgrades bar/line/area to a stat tile.** A one-bar bar chart is not a chart. The consequence worth knowing: the rendered form can disagree with the server's `kind`.
 
+**Trimming is a loop, not a pattern.** Joining the mounted base to a route used
+`base.replace(/\/+$/, '')`, which CodeQL flagged and which measured genuinely
+quadratic — 16,000 slashes took 89ms, and the test that pins it takes 3.4 seconds
+against the old implementation. The anchor is the trap: on a run of slashes that is not
+at the end, `$` can never match, so the engine retries at every position and backtracks
+the whole run before failing. This is the second pattern in this repository CodeQL has
+caught, after the trailing-comma stripper in chapter 07, and the fix is the same shape
+both times: the pattern only existed to undo something simple, and a loop does it in one
+pass with no way to backtrack.
+
+Worth recording the difference from the first finding, since it changes how to triage
+the next one: that one measured **linear** under V8 and was a true positive about the
+pattern rather than a live problem. This one measured quadratic. Measure before deciding
+how much a finding is worth.
+
 ## Consequences
 
 The package renders but does not collect: there is no input box, no request cache, and two components asking the same question issue two model calls.
