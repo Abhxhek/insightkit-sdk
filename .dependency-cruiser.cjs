@@ -108,6 +108,22 @@ module.exports = {
       to: { path: '^packages/core/src/plan/|^packages/sql-guard/' },
     },
     {
+      name: 'server-never-reaches-the-browser',
+      severity: 'error',
+      comment:
+        'server holds connection material and a model key. It talks to the browser over HTTP, never in process.',
+      from: { path: '^packages/server/src' },
+      to: { path: '^packages/react/' },
+    },
+    {
+      name: 'server-reaches-the-guard-through-core',
+      severity: 'error',
+      comment:
+        'The HTTP layer does not get its own opinion about what SQL is safe. It reaches the guard through core, which is the one place the sealed read path is assembled.',
+      from: { path: '^packages/server/src' },
+      to: { path: '^packages/sql-guard/' },
+    },
+    {
       name: 'no-circular',
       severity: 'error',
       from: {},
