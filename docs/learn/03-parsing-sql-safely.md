@@ -117,7 +117,9 @@ But it now denies anyway, with `E_NUL_BYTE`. Two reasons. The guard was acceptin
 
 The general lesson: **know what your dependencies are written in.** A WebAssembly-compiled C parser inherits C's string semantics, and that leaks through an API that otherwise looks like ordinary JavaScript.
 
-## The three layers
+## The layers
+
+This section was first written as *three* layers. Building the guard found two more — the field allowlist, and the byte check above — and the heading kept saying three long after the table said otherwise. ADR 0002 records the same drift.
 
 Each catches something the others structurally cannot:
 
@@ -127,6 +129,7 @@ Each catches something the others structurally cannot:
 | Node tag allowlist | writes anywhere in the tree | `WITH x AS (DELETE …) SELECT * FROM x` |
 | Field allowlist | untagged inlined structs | `SELECT * INTO exfil FROM users` |
 | Function allowlist | legal structure, hostile call | `SELECT pg_read_file('/etc/passwd')` |
+| Input byte check | NUL truncation inside the C parser | `SELECT 1<NUL>; DROP TABLE users` |
 
 Remove any one and a whole category walks through.
 
@@ -169,8 +172,8 @@ Worth being precise, because a security component that overstates its scope is w
 
 The guard reasons about SQL text. It does **not** know:
 
-- whether `ik_reader` actually lacks write grants (that is `ik doctor --prove-isolation`)
+- whether `ik_reader` actually lacks write grants (that is `ik doctor`)
 - whether a view or function the query touches has side effects (that is the role and the read-only transaction)
 - whether the caller is allowed to see the rows returned (that is RLS, applied from the viewer's token)
 
-It is one of four independent defences, and it is the only one that runs before the database is touched at all. Defence in depth means none of them is load-bearing alone.
+It is one of several independent defences, and it is the only one that runs before the database is touched at all. Defence in depth means none of them is load-bearing alone.

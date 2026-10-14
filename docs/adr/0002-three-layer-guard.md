@@ -1,4 +1,4 @@
-# ADR 0002 — The guard needs three independent layers, not one
+# ADR 0002 — The guard needs independent layers, not one
 
 Status: accepted, 2026-08-25
 
@@ -20,7 +20,9 @@ By contrast `SELECT ... FOR UPDATE` does surface a `LockingClause` tag and is ca
 
 ## Decision
 
-Four checks, each catching a class the others structurally cannot:
+Five checks, each catching a class the others structurally cannot:
+
+(This record was written as *three* layers. The field allowlist and the input byte check were found afterwards, and the count was never reconciled — the heading said three, the body four, the table five. The table was always right. The filename keeps its original `three-layer` slug, because records are never renamed or renumbered.)
 
 | Layer | Catches | Example it alone stops |
 |---|---|---|

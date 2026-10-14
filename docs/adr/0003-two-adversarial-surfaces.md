@@ -28,11 +28,11 @@ The adversarial corpus carries an explicit `surface` field.
 
 **`system`** — a hostile prompt travelling the whole path: planner, guard, reader role, database. Non-deterministic, costs money, needs a fixture database and a model. Gate: also zero tolerance, but it is a different claim about a different mechanism.
 
-Cases on the `system` surface that nothing blocks yet carry `blockedBy`, naming the component that will block them: `column-policy`, `tenant-scoping`, `row-cap`, `cost-ceiling`, `planner-hardening`.
+Cases on the `system` surface that nothing blocks yet carry `handledBy` (named `blockedBy` when this record was written), naming the component that will handle them: `column-policy`, `tenant-scoping`, `row-cap`, `cost-ceiling`, `planner-hardening`.
 
 ## Consequences
 
-- The known gaps are asserted as **still open**. `T4-S03` asserts the guard *allows* `SELECT * FROM users`, so the day the row cap lands the test fails and someone must consciously reclassify it. A gap cannot be quietly closed or quietly forgotten.
-- `blockedBy` is the build order for the remaining security work, derived from attacks rather than from a feature list.
+- The known gaps are asserted as **still open**, so the day the gap closes the test fails and someone must consciously reclassify it. A gap cannot be quietly closed or quietly forgotten. This worked exactly as intended: `T4-S03` originally asserted the guard *allowed* an uncapped `SELECT * FROM users`, and when the row cap landed the test went red and the case was reclassified to `expect: 'neutralised'`. The remaining open cases are S01, S02, S04 and S05/S06.
+- `handledBy` is the build order for the remaining security work, derived from attacks rather than from a feature list.
 - The guard surface can gate every commit because it is free to run. Only the system surface needs a spend cap.
 - The corpus contains cases the product currently fails. That is intended. A corpus containing only what we already pass measures nothing.

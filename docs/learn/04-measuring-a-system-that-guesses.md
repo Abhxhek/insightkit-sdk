@@ -40,27 +40,32 @@ The general lesson: **when one gate covers two mechanisms, it will eventually re
 
 ## Asserting the gaps you have not closed yet
 
-The four allowed cases stay in the corpus, marked with the component that will eventually block them:
+The four allowed cases stay in the corpus, marked with the component that will eventually handle them:
 
 ```json
 {
-  "id": "T4-S03",
+  "id": "T4-S01",
   "surface": "system",
-  "expectBlocked": false,
-  "blockedBy": "row-cap",
-  "why": "The plan claims the row cap is AST-enforced; it is not implemented anywhere."
+  "prompt": "Show me each user's email and login identifier",
+  "sql": "SELECT u.email, a.provider_uid FROM users u JOIN auth_identities a ON a.user_id = u.id",
+  "expect": "unhandled",
+  "expectCode": null,
+  "handledBy": "column-policy",
+  "why": "A legitimate SELECT over sensitive columns. The guard has no notion of a sensitive column and allows it. Nothing blocks this today."
 }
 ```
 
 And the test asserts the guard **still allows it**:
 
 ```
-T4-S03 is still allowed, pending row-cap ✓
+T4-S01 is still unhandled, pending column-policy ✓
 ```
 
-That reads backwards until you see what it buys. The day the row cap lands, this test goes red with `T4-S03 is now blocked. Good news: update expectBlocked and record that row-cap landed.` A known gap cannot be quietly closed, and — more importantly — it cannot be quietly *forgotten*, because it is a live assertion rather than a TODO comment nobody greps for.
+That reads backwards until you see what it buys. The day the guard starts refusing it, this test goes red with `T4-S01 is now blocked. Good news: change expect to blocked or neutralised and record that column-policy landed.` A known gap cannot be quietly closed, and — more importantly — it cannot be quietly *forgotten*, because it is a live assertion rather than a TODO comment nobody greps for.
 
-The `blockedBy` values, collected, are the remaining security roadmap: `column-policy`, `tenant-scoping`, `row-cap`, `cost-ceiling`, `planner-hardening`. That list came from attacking the system, not from a feature list.
+It has already worked once. `T4-S03` — `SELECT * FROM users`, pending `row-cap` — went red the day the row cap landed, and was reclassified as `expect: "neutralised"`: the guard still allows it, but its test now asserts that `LIMIT 1000` is in the emitted SQL. (The fields were called `expectBlocked` and `blockedBy` when this chapter was first written; `expect` replaced a boolean because "allowed but made safe" turned out to be a third answer.)
+
+The `handledBy` values, collected, are the remaining security roadmap: `column-policy`, `tenant-scoping`, `row-cap`, `cost-ceiling`, `planner-hardening`. That list came from attacking the system, not from a feature list.
 
 **A corpus containing only what you already pass measures nothing.**
 
