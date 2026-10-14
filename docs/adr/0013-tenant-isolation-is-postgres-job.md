@@ -40,11 +40,13 @@ The algorithm allowlist is explicit and never taken from the token's own header.
 
 **The new doctor checks are conditionally blocking.** They block only when the host declares `tenantScoping: true`; otherwise they downgrade to review rather than going silent. Always-blocking turns every single-tenant install red and gets doctor ignored; always-advisory lets a multi-tenant install ship green.
 
+Only T1 and T2 are conditional; T3 and T4 are review findings in every mode. And the flag is honoured by `isolationChecks` in core but never set by `ik doctor` — the CLI has no way to declare tenant scoping — so through the CLI every row-security check is advisory, which is exactly the always-advisory outcome rejected above. Until a flag exists, a multi-tenant install must run `ik doctor --strict`.
+
 ## Consequences — read this part
 
 **A table where the customer never wrote a policy is completely unprotected.** `SET LOCAL app.tenant_id` sets a variable that nothing reads. If `relrowsecurity` is false, the setting is inert and every end user sees every row, with no error at query time. The SDK cannot detect this; only `ik doctor` can.
 
-The customer must do this on **every** readable table, in their own migrations, and run doctor in CI so a new table cannot ship without it:
+The customer must do this on **every** readable table, in their own migrations, and run `ik doctor --strict` in CI so a new table cannot ship without it:
 
 ```sql
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
@@ -55,7 +57,7 @@ CREATE POLICY tenant_isolation ON orders FOR SELECT TO ik_reader
 
 That is a real adoption cost, and it is the honest price of not pretending a rewriter is safe.
 
-**Nothing currently requires a scope to be passed.** `runGuardedRead(source, query)` with no scope runs unscoped. That is the largest remaining fail-open. It is not fixable in `core` alone — a single-tenant install legitimately has no scope — so it belongs in `server`, which is where a request maps to a tenant.
+**Nothing currently requires a scope to be passed.** `runGuardedRead(source, query)` with no scope runs unscoped. That is the largest remaining fail-open. It is not fixable in `core` alone — a single-tenant install legitimately has no scope — so it belongs in `server`, which is where a request maps to a tenant. ADR 0015 records how `server` closed it for its own callers.
 
 **RLS on with no matching policy returns zero rows, not an error.** The user sees an empty chart and believes it. A doctor check flags the configuration; nothing catches it at query time.
 

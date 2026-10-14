@@ -43,11 +43,12 @@ Three of these carry real weight.
 
 The developer who does this will not be us. It will be someone six months from now who wanted a type and grabbed the wrong import. It will look fine in dev. It will ship.
 
-Three independent defences, because one is not enough for a failure this quiet:
+Two independent defences, because one is not enough for a failure this quiet:
 
-1. `server-only` imported in `core`'s entrypoint — the Next.js build hard-fails.
-2. An `exports` map with no shared root barrel, so there is no import path that reaches both.
-3. A dependency-cruiser rule in CI.
+1. An `exports` map with no shared root barrel, so there is no import path that reaches both.
+2. A dependency-cruiser rule in CI.
+
+A third was planned — `server-only` imported in `core`'s entrypoint, so a Next.js build hard-fails — and was never added. It is written here as a gap rather than quietly dropped, because the docs claimed three defences for weeks while two existed.
 
 ### `sql-guard` must not reach a socket, a file, or a sibling
 
@@ -90,7 +91,7 @@ Ask "what must be true no matter who edits this next year?" Then find the mechan
 |---|---|---|
 | Guard has no I/O | code review | dependency-cruiser rule in CI |
 | Guard has one dependency | documentation | pnpm strict resolution |
-| Browser never gets the pool | naming convention | `server-only` + `exports` + CI rule |
+| Browser never gets the pool | naming convention | `exports` map + CI rule |
 | Deny branch is handled | remembering to | discriminated union, compiler-enforced |
 | Attack cases stay in the corpus | good intentions | minimum-count assertion in the test |
 

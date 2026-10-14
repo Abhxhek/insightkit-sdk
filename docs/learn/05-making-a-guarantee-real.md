@@ -138,6 +138,8 @@ Three are **advisory**, and being honest about why is the point:
 
 Saying so plainly is better than a checklist that implies otherwise.
 
+Four more checks, T1–T4 on row security, arrived later with tenant scoping. [ADR 0013](../adr/0013-tenant-isolation-is-postgres-job.md) explains why they block only when tenant scoping is declared — and why, through the CLI, they currently never do.
+
 Two smaller design points, both about not lying to yourself:
 
 **A check that could not run is a failure, not a pass.** If the catalog query throws — permission denied, table missing — the result is `fail`, never silently skipped. Otherwise a locked-down database produces a green proof by refusing to answer the questions.
