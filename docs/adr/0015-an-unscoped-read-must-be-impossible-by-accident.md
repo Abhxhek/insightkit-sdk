@@ -23,7 +23,9 @@ ADR 0013 ended with the largest known fail-open in the project:
 
 **Security events change throttling, not status.** Attack-shaped denials accumulate strikes against an identity and eventually earn a cooldown; answering 403 on detection would be the same oracle by another route. The strike is recorded *before* the host's callback runs, so a throwing logger cannot lose it.
 
-**Subscribe re-resolves the scope from the bearer token on every tick**, and the stream store keeps only the identity, never the settings. Storing ask-time settings would let a revoked token keep streaming under a stale scope.
+**Subscribe resolves the scope from the bearer token when the stream opens**, and the stream store keeps only the identity, never the settings — so a token cannot be replayed by another tenant, and the tenant setting is re-applied on every read rather than captured once into SQL.
+
+An earlier draft of this record claimed the scope was re-resolved *on every tick*. It is not: `resolveScope` is called once per request and the result is closed over for the life of the stream. A token revoked mid-stream therefore keeps streaming until the maximum duration expires. That is a real gap, and the honest fix needs `TenantScope` to carry the token's expiry, which it currently drops.
 
 **Unknown, expired and another identity's stream token answer identically** — a single `closed: expired` frame. Distinguishing them would tell a token holder which case they hit.
 
