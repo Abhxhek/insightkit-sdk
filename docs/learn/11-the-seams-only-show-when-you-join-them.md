@@ -86,4 +86,4 @@ Three habits that actually caught things here:
 
 ---
 
-Next: none of this has met a real database or a real model. Eight packages are built, 846 tests pass, and the product's central claim — that it answers correctly — remains entirely unmeasured.
+Next: none of this has met a real database or a real model. Eight packages are built, the suite is green, and the product's central claim — that it answers correctly — remains entirely unmeasured.

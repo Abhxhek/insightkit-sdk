@@ -15,9 +15,9 @@ Everything else in the product is negotiable. This is not. InsightKit runs insid
 This creates an apparent contradiction the architecture has to resolve rather than hand-wave: the product must also *write* its own metadata (sessions, cached results, migrations). Two independently verifiable guarantees, never one:
 
 - **G1** — SQL derived from a user prompt can only read. Enforced by the `sql-guard` kernel, a dedicated `ik_reader` role with only `GRANT SELECT`, and a sealed read-only transaction.
-- **G2** — InsightKit's own metadata writes go through a separate `ik_admin` role, touch only the `insightkit` schema, and never carry user-authored SQL.
+- **G2** — InsightKit's own metadata writes go through a separate `ik_meta` role, touch only the `insightkit` schema, and never carry user-authored SQL.
 
-`ik doctor --prove-isolation` verifies both against the live catalog. Neither is taken on trust.
+`ik doctor` proves G1 against the live catalog — including that the reader cannot reach the metadata schema — and exits non-zero when the proof fails. G2 is enforced in code: the store and its migrations refuse anything but an `AdminSource`, and the store's API accepts no SQL string. No doctor check yet confirms that the metadata role is confined to its own schema.
 
 ## Architecture: the trust boundary is a package boundary
 
@@ -27,11 +27,11 @@ The component that decides whether SQL is safe is a standalone package that **ca
 packages/
   sql-guard/    security kernel — pure, zero I/O, deps: pgsql-parser only
   protocol/     shared types + zod schemas (browser <-> server)
-  core/         engine — the ONLY package that may import `pg`
-  llm/          model provider adapters
-  server/       HTTP handlers (next / express / fastify / hono)
+  core/         engine — every database query goes through it
+  llm/          model provider adapters — Anthropic, OpenAI
+  server/       HTTP + SSE handlers (next / node / fastify / hono)
   react/        components and hooks — browser only
-  cli/          ik init | doctor | migrate
+  cli/          ik init | doctor | introspect
   eval/         the release gate — corpus + harness, never published
 ```
 
@@ -41,16 +41,18 @@ packages/
 |---|---|---|
 | `sql-guard` | `pgsql-parser` and nothing else | `pg`, `node:*`, any `@insightkit/*` |
 | `protocol` | `zod` | anything server-side |
-| `core` | `protocol`, `sql-guard`, `pg` | `react`, **`llm`** |
-| `llm` | `protocol` | `pg`, `sql-guard` |
-| `react` | `protocol` | **`core`** |
-| `cli` | `core`, `protocol`, `pg`, `node:*` | `react`; and nothing may import `cli` |
-| `server` | `core`, `protocol` | `react`, `sql-guard` (types reached transitively through `core`) |
+| `core` | `sql-guard`, `jose`, `pg` (optional peer, behind the `@insightkit/core/pg` subpath) | `react`, **`llm`**, and in practice `protocol` — it declares its own `ChartSpec` and `ResultSet` |
+| `llm` | no workspace package; `@anthropic-ai/sdk` and `openai` as optional peers | `pg`, `sql-guard`, `core` |
+| `react` | `protocol`, and `react` as a peer | **`core`**, `server`, `cli`, Node builtins, `pg` |
+| `cli` | `core`, `node:*`; `pg` loaded at runtime and handed straight to `fromPgPool` | `react`, a static `pg` import; and nothing may import `cli` |
+| `server` | `core`, `protocol` | `react`, `sql-guard` (the guard's type is taken from `core`) |
 | `eval` | `sql-guard`, the public API of what it scores | `pg`, `node:*` in `src`; nothing may import `eval` |
 
-Two rows carry real weight:
+A forbidden import of a sibling package fails `pnpm verify` by one of two routes. A package that does not declare the dependency cannot resolve it under pnpm's strict layout, so the typecheck fails — dependency-cruiser reports such an import as unresolvable and does not flag it. One that declares the dependency, or reaches the sibling by a relative path, is caught by the dependency-cruiser rule.
 
-- **`react` must never reach `core`.** One `import { Engine } from '@insightkit/core'` in a Next.js client component ships the database URL into the browser bundle. Defended three ways: `server-only` in `core`'s entrypoint, an `exports` map with no mixed root barrel, and a CI rule.
+Three rows carry real weight:
+
+- **`react` must never reach `core`.** One `import { Engine } from '@insightkit/core'` in a Next.js client component ships the database URL into the browser bundle. Defended two ways: an `exports` map with no mixed root barrel, and an enforced dependency rule. (A `server-only` import in `core`'s entrypoint was planned as a third and has not been added.)
 - **`core` must never reach `llm` either.** It declares the provider shape structurally, as it does for `pg`, so reaching a model costs no dependency and any client satisfying the shape works.
 - **`llm` must never reach `sql-guard`.** The code that talks to an untrusted model does not sit next to the code that decides what is trusted. Model output crosses that gap as a string and returns as a verdict.
 
@@ -75,17 +77,17 @@ Changes under `packages/sql-guard/**` require review via CODEOWNERS.
 ## Layout
 
 ```
-docs/learn/     concept explanations, written alongside the code
-docs/adr/       architecture decision records, numbered
-security/       threat model and disclosure policy
-e2e/            Testcontainers: real Postgres, real roles, real RLS
+docs/learn/          concept explanations, written alongside the code
+docs/adr/            architecture decision records, numbered
+packages/*/README.md each package's boundary, usage and limits
+SECURITY.md          threat model, reporting, and what counts as a vulnerability
 ```
 
 ## Commands
 
 ```
 pnpm install
-pnpm verify      # typecheck + lint + dependency rules + tests. The gate.
+pnpm verify      # build + typecheck + lint + dependency rules + tests. The gate.
 pnpm test
 pnpm build
 ```
@@ -95,7 +97,7 @@ pnpm build
 Accuracy is the product's central risk, and it is invisible without measurement. The corpus is built **before** the planner, so "does it work" is a number rather than an impression.
 
 1. **Two adversarial surfaces, not one.** `guard` cases are SQL text hitting the validator — deterministic, free, every commit. `system` cases are prompts travelling the whole path — non-deterministic, costed, gated separately. See ADR 0003.
-2. **Known gaps are asserted open.** A case nothing blocks yet carries `blockedBy` and a test asserting it is *still* allowed, so closing the gap fails the build and forces reclassification. `blockedBy` values are the remaining security roadmap: `column-policy`, `tenant-scoping`, `row-cap`, `cost-ceiling`, `planner-hardening`.
+2. **Known gaps are asserted open.** A case nothing blocks yet carries `handledBy` and a test asserting it is *still* allowed, so closing the gap fails the build and forces reclassification. `handledBy` values are the remaining security roadmap: `column-policy`, `tenant-scoping`, `row-cap`, `cost-ceiling`, `planner-hardening`.
 3. **Grade by execution, as a multiset.** Set equality hides a missing `DISTINCT`. Quantise numbers so equality is transitive, then compare exactly; the boundary artefact fails closed.
 4. **Three outcomes.** `INFRA_ERROR` is excluded from the denominator and capped, past which the run is `INCONCLUSIVE`. Retry transient errors only — never retry a wrong answer into a pass.
 5. **A spend cap needs bounded concurrency.** `Promise.all` over the corpus dispatches everything before the first cost returns, so the cap can never fire.
@@ -114,7 +116,7 @@ Core is where G1 stops being a claim about SQL text and becomes a claim about th
 6. **Fail closed on interpolation.** `SET LOCAL` cannot take bind parameters, so identifiers are validated against a strict pattern and timeouts against a range. Throw, never escape.
 7. **A check that could not run is a failure.** Otherwise a locked-down database produces a green proof by refusing to answer.
 8. **No driver dependency.** Core defines the client shape structurally, so it is testable without a database and a second driver is an interface implementation rather than a rewrite. Rows must be arrays: object rows collapse `SELECT a.id, b.id` to one key. The node-postgres adapter lives behind the `@insightkit/core/pg` subpath with `pg` as an *optional* peer dependency, so the main entry never references a driver.
-9. **Lossy driver conversions cross the boundary as text.** node-postgres turns a `date` into a JS `Date` at local midnight, so `2026-09-05` serialises to the 4th anywhere east of UTC — a wrong axis with no error, dependent on the server's timezone. `date`, `time`, `timestamp`, `interval`, `bytea` and `numeric[]` are returned as the text Postgres sent; everything the driver gets right is left alone. The registry is per-query — `pg.types.setTypeParser` is global and would change the host application's own queries. See ADR 0007.
+9. **Lossy driver conversions cross the boundary as text.** node-postgres turns a `date` into a JS `Date` at local midnight, so `2026-09-05` serialises to the 4th anywhere east of UTC — a wrong axis with no error, dependent on the server's timezone. `date`, `time`, `timestamp` (with and without zone), `interval`, `bytea` and `numeric[]` are returned as the text Postgres sent, and so are `float4` and `float8`, because `JSON.stringify` turns `NaN` and `Infinity` into `null`; everything the driver gets right is left alone. The registry is per-query — `pg.types.setTypeParser` is global and would change the host application's own queries. See ADR 0007.
 10. **Introspection describes what the reader can see.** Every catalog query filters on `has_schema_privilege` / `has_table_privilege` / `has_column_privilege`, both ends of a foreign key are checked, and the metadata schema is excluded. Describing a withheld table puts its name and columns into a prompt, which is a disclosure even though no row leaks. Keys come from `pg_constraint.conkey` (a real `int2[]`) rather than `pg_index.indkey`. Results are capped, and each query selects one row past the cap so truncation is observed rather than inferred. See ADR 0008.
 11. **Retrieval is lexical and deterministic, for now.** The schema reaches a prompt as Postgres DDL with comments and row estimates kept, and a foreign key is rendered only when both tables are present. Tables are scored by token overlap with the question, a match pulls in its foreign key neighbours so a join is expressible, and `matched: false` is reported rather than a fallback being passed off as a hit. The token budget is checked by rendering the candidate set, not by estimating from metadata. Vocabulary mismatch (`monthly recurring revenue` vs `mrr_cents`) is a known gap and belongs to the semantic layer. See ADR 0009.
 
@@ -179,10 +181,17 @@ Four surfaces where information leaves our hands. Each is decided by what must *
 
 ## State
 
-`sql-guard` (security kernel), `eval` (release gate), `llm` (provider adapters), `protocol` (wire contract), `cli` (`ik init | doctor | introspect`) and `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, retrieval, planner, tenant identity, semantic layer) are built and green. Nothing is published to npm.
+All eight packages are built and green: `sql-guard` (security kernel), `eval` (release gate), `llm` (provider adapters), `protocol` (wire contract), `cli` (`ik init | doctor | introspect`), `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, retrieval, planner, tenant identity, semantic layer, approved-query store), `server` (HTTP and SSE handlers) and `react` (component, hooks, SVG charts). Nothing is published to npm.
 
-All eight packages are built. `server` wires the planner, the semantic layer, tenant scoping and the reader path together and closes the unscoped-read fail-open for its own callers; `runGuardedRead` itself still accepts no scope, so a host using `core` directly must re-invent that. The planner has never run against a real model or database, so accuracy is unmeasured.
+`server` wires the planner, the semantic layer, tenant scoping and the reader path together and closes the unscoped-read fail-open for its own callers; `runGuardedRead` accepts a scope but does not *require* one, so a host using `core` directly must re-invent that obligation. The planner has never run against a real model or database, so accuracy is unmeasured.
 
 **Nothing has run against a real Postgres.** Core is tested against a recording fake and, for the adapter, against node-postgres' own `Result` parser — which proves what we send, what we refuse, and how the driver converts, but not how a server responds. `pnpm --filter @insightkit/core smoke` turns the outstanding claims into observations against a live database; it is the first thing to run once one exists. Testcontainers e2e remains the highest-value work.
+
+Known gaps where packages meet:
+
+- **`ik doctor` cannot be told that tenant scoping is in use.** Core's `isolationChecks` takes `tenantScoping` to make the row-security checks blocking, but the CLI has no flag for it, so a database with row security off everywhere exits 0 unless `--strict` is passed.
+- **Live updates are off unless the server enables them, and nothing says so.** `<Insight live />` streams only when `createInsightKit` is given `live`. Without it, `ask` issues no stream token and the chart quietly renders once.
+- **Live updates in multi-tenant mode need `tokenFrom`.** `subscribe` resolves the tenant from the same bearer token `ask` does, and a browser `EventSource` cannot send an `Authorization` header — so with the defaults a multi-tenant subscription is refused with 401.
+- **A subscription's scope is resolved once, when the stream opens.** A token revoked mid-stream keeps streaming until `maxDurationMs` expires. See ADR 0015.
 
 Still asserted open in the eval corpus: `column-policy` (T4-S01), `tenant-scoping` (T4-S02), `cost-ceiling` (T4-S04), `planner-hardening` (T4-S05/S06). `tenant-scoping` now has machinery behind it, but the corpus case stays open until the reader path *requires* a scope rather than merely accepting one.
