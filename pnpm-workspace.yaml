@@ -6,3 +6,7 @@ packages:
 # Each entry is arbitrary code execution at install time. Reviewed exceptions only.
 allowBuilds:
   esbuild: true
+
+# source-map-js below 1.2.2 is GHSA-68fv-2mgg-jv7q, and the postcss vite locks still accepts it.
+overrides:
+  source-map-js@>=1.0.0 <1.2.2: ^1.2.2
