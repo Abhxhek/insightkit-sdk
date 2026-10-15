@@ -15,22 +15,22 @@ The rule runs the other way too: `core-never-reaches-the-browser` stops `core` i
 ## Install
 
 ```bash
-npm install insightics
+npm install insightics-sdk
 
 # then whichever provider you actually use
 npm install @anthropic-ai/sdk   # >=0.124.0
 npm install openai              # >=7.0.0
 ```
 
-Not published on its own: it ships inside `insightics` and is imported from `insightics/llm`, `insightics/llm/anthropic` and `insightics/llm/openai`.
+Not published on its own: it ships inside `insightics-sdk` and is imported from `insightics-sdk/llm`, `insightics-sdk/llm/anthropic` and `insightics-sdk/llm/openai`.
 
 Both peer dependencies are marked optional, and each adapter lives behind its own subpath (`insightics-llm/anthropic`, `insightics-llm/openai`), so importing one never pulls in the other. The floors are the versions actually exercised, not the oldest plausible ones. ADR 0010 records why: an earlier range claimed `>=0.70.0` while the code was written against `output_config.format`, which 0.70 does not have.
 
 ## Usage
 
 ```ts
-import { anthropicProvider } from 'insightics/llm/anthropic';
-import { ModelError } from 'insightics/llm';
+import { anthropicProvider } from 'insightics-sdk/llm/anthropic';
+import { ModelError } from 'insightics-sdk/llm';
 
 const provider = anthropicProvider({
   apiKey: process.env.ANTHROPIC_API_KEY!,

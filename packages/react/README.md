@@ -6,7 +6,7 @@ The component a developer drops into an admin panel. It posts a question to the 
 
 `insightics-protocol` and `react` are the entire import surface. `package.json` lists one dependency and one peer.
 
-`react` may **never** import `insightics-core`. One `import { … } from 'insightics/core'` inside a Next.js client component ships the database connection string into the browser bundle — not a leak that shows up in a test, a leak that shows up in someone's `main.js`. This package talks to the server over HTTP, never in process.
+`react` may **never** import `insightics-core`. One `import { … } from 'insightics-sdk/core'` inside a Next.js client component ships the database connection string into the browser bundle — not a leak that shows up in a test, a leak that shows up in someone's `main.js`. This package talks to the server over HTTP, never in process.
 
 Enforced three ways, each of which fails `pnpm verify`:
 
@@ -17,15 +17,15 @@ Enforced three ways, each of which fails `pnpm verify`:
 ## Install
 
 ```sh
-npm install insightics
+npm install insightics-sdk
 ```
 
-Not published on its own: it ships inside `insightics` and is imported from `insightics/react`. It needs `react >=18`, which `insightics` lists as an optional peer only because a backend never imports this part. There is no charting dependency at all — the SVG is hand-rolled, and the stylesheet ships inside the component.
+Not published on its own: it ships inside `insightics-sdk` and is imported from `insightics-sdk/react`. It needs `react >=18`, which `insightics-sdk` lists as an optional peer only because a backend never imports this part. There is no charting dependency at all — the SVG is hand-rolled, and the stylesheet ships inside the component.
 
 ## Usage
 
 ```tsx
-import { Insight } from 'insightics/react';
+import { Insight } from 'insightics-sdk/react';
 
 export const Panel = () => (
   <Insight

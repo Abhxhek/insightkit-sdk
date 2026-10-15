@@ -1,4 +1,4 @@
-# insightics
+# insightics-sdk
 
 Prompt-driven, real-time analytics for a Node application. Point it at your Postgres database, drop a component into your admin panel, and your users ask questions in plain language — *"how many users joined this week, split by signup method"* — and get a live chart back.
 
@@ -9,7 +9,7 @@ SQL derived from a prompt can only ever read. That is enforced by a parser-based
 ## Install
 
 ```bash
-npm install insightics pg @anthropic-ai/sdk
+npm install insightics-sdk pg @anthropic-ai/sdk
 ```
 
 Use `openai` instead of `@anthropic-ai/sdk` if that is your provider. `pg`, the model SDKs and `react` are optional peers: install the ones you use.
@@ -18,28 +18,28 @@ Use `openai` instead of `@anthropic-ai/sdk` if that is your provider. `pg`, the 
 
 | Import | What it is | Runs in |
 |---|---|---|
-| `insightics/server` | the HTTP handler, with adapters for Next, Node/Express, Fastify and Hono | your server |
-| `insightics/react` | `<Insight />`, `useAsk`, `useLiveResult` and dependency-free SVG charts | the browser |
-| `insightics/core` | the read-only path, schema introspection, the planner, tenant scoping | your server |
-| `insightics/core/pg` | the node-postgres adapter | your server |
-| `insightics/sql-guard` | the security kernel: is this SQL a single, safe, read-only `SELECT`? | anywhere |
-| `insightics/llm/anthropic`, `insightics/llm/openai` | model provider adapters | your server |
-| `insightics/llm`, `insightics/protocol` | shared types and the browser–server contract | both |
+| `insightics-sdk/server` | the HTTP handler, with adapters for Next, Node/Express, Fastify and Hono | your server |
+| `insightics-sdk/react` | `<Insight />`, `useAsk`, `useLiveResult` and dependency-free SVG charts | the browser |
+| `insightics-sdk/core` | the read-only path, schema introspection, the planner, tenant scoping | your server |
+| `insightics-sdk/core/pg` | the node-postgres adapter | your server |
+| `insightics-sdk/sql-guard` | the security kernel: is this SQL a single, safe, read-only `SELECT`? | anywhere |
+| `insightics-sdk/llm/anthropic`, `insightics-sdk/llm/openai` | model provider adapters | your server |
+| `insightics-sdk/llm`, `insightics-sdk/protocol` | shared types and the browser–server contract | both |
 
 It also installs the `ik` command: `npx ik init`, `npx ik doctor`, `npx ik introspect`.
 
-**There is no `import … from 'insightics'`, on purpose.** A root import would mix browser and server code, and one wrong import in a client component would ship your database URL and model key into the browser bundle. Inside the repository each path is a separate package with its own enforced boundaries; the build packs them into this one, and a test checks that the packed `insightics/react` reaches nothing on the server side.
+**There is no `import … from 'insightics-sdk'`, on purpose.** A root import would mix browser and server code, and one wrong import in a client component would ship your database URL and model key into the browser bundle. Inside the repository each path is a separate package with its own enforced boundaries; the build packs them into this one, and a test checks that the packed `insightics-sdk/react` reaches nothing on the server side.
 
 ## Quick start
 
 Server, mounted at `app/api/insightics/[...route]/route.ts`:
 
 ```ts
-import { asReaderSource, introspectSchema } from 'insightics/core';
-import { fromPgPool } from 'insightics/core/pg';
-import { anthropicProvider } from 'insightics/llm/anthropic';
-import { createInsightics, SINGLE_TENANT_ACKNOWLEDGEMENT, singleTenant, toNextRoute } from 'insightics/server';
-import { createGuard } from 'insightics/sql-guard';
+import { asReaderSource, introspectSchema } from 'insightics-sdk/core';
+import { fromPgPool } from 'insightics-sdk/core/pg';
+import { anthropicProvider } from 'insightics-sdk/llm/anthropic';
+import { createInsightics, SINGLE_TENANT_ACKNOWLEDGEMENT, singleTenant, toNextRoute } from 'insightics-sdk/server';
+import { createGuard } from 'insightics-sdk/sql-guard';
 import { Pool } from 'pg';
 
 const source = asReaderSource(
@@ -62,7 +62,7 @@ Browser:
 
 ```tsx
 'use client';
-import { Insight } from 'insightics/react';
+import { Insight } from 'insightics-sdk/react';
 
 export const Signups = () => (
   <Insight endpoint="/api/insightics" question="how many users signed up this week, by signup method" live />

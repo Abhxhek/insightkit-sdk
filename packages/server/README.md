@@ -17,28 +17,28 @@ How that is enforced, precisely:
 ## Install
 
 ```sh
-npm install insightics
+npm install insightics-sdk
 ```
 
-Not published on its own: it ships inside `insightics` and is imported from `insightics/server`. It declares no peer dependencies of its own. You supply three things it does not create for you:
+Not published on its own: it ships inside `insightics-sdk` and is imported from `insightics-sdk/server`. It declares no peer dependencies of its own. You supply three things it does not create for you:
 
-- a guard — `createGuard()` from `insightics/sql-guard`
-- a `ModelProvider` — core declares the shape structurally, so anything matching it works; `anthropicProvider` from `insightics/llm/anthropic` is one
-- a `ReaderSource` — `fromPgPool` from `insightics/core/pg`, which needs `pg` (an **optional** peer)
+- a guard — `createGuard()` from `insightics-sdk/sql-guard`
+- a `ModelProvider` — core declares the shape structurally, so anything matching it works; `anthropicProvider` from `insightics-sdk/llm/anthropic` is one
+- a `ReaderSource` — `fromPgPool` from `insightics-sdk/core/pg`, which needs `pg` (an **optional** peer)
 
 ## Usage
 
 ```ts
-import { asReaderSource, introspectSchema } from 'insightics/core';
-import { fromPgPool } from 'insightics/core/pg';
-import { anthropicProvider } from 'insightics/llm/anthropic';
+import { asReaderSource, introspectSchema } from 'insightics-sdk/core';
+import { fromPgPool } from 'insightics-sdk/core/pg';
+import { anthropicProvider } from 'insightics-sdk/llm/anthropic';
 import {
   createInsightics,
   SINGLE_TENANT_ACKNOWLEDGEMENT,
   singleTenant,
   toNextRoute,
-} from 'insightics/server';
-import { createGuard } from 'insightics/sql-guard';
+} from 'insightics-sdk/server';
+import { createGuard } from 'insightics-sdk/sql-guard';
 import { Pool } from 'pg';
 
 const source = asReaderSource(
