@@ -1,6 +1,6 @@
-import { ModelError } from '@insightkit/llm';
-import type { Guard } from '@insightkit/sql-guard';
-import { createGuard } from '@insightkit/sql-guard';
+import { ModelError } from 'insightics-llm';
+import type { Guard } from 'insightics-sql-guard';
+import { createGuard } from 'insightics-sql-guard';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { ColumnInfo, DatabaseSchema, TableInfo } from '../src/introspect/types.js';
 import { planQuery } from '../src/plan/planner.js';
@@ -266,11 +266,11 @@ describe('when the model itself fails', () => {
 });
 
 describe('the seam between core and a real provider', () => {
-  it('accepts a provider built by @insightkit/llm without core importing it', async () => {
+  it('accepts a provider built by insightics-llm without core importing it', async () => {
     // core declares ModelProvider structurally so it takes on no dependency to reach a
     // model. That only holds while a real adapter still satisfies the shape, which is
     // a compile-time claim this makes at runtime too.
-    const { anthropicProvider } = await import('@insightkit/llm/anthropic');
+    const { anthropicProvider } = await import('insightics-llm/anthropic');
     const real: ModelProvider = anthropicProvider({ apiKey: 'sk-test-key', model: 'claude-opus-5' });
     expect(real.id).toBe('anthropic');
     expect(typeof real.complete).toBe('function');

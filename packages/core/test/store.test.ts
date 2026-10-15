@@ -1,5 +1,5 @@
-import type { Guard } from '@insightkit/sql-guard';
-import { createGuard } from '@insightkit/sql-guard';
+import type { Guard } from 'insightics-sql-guard';
+import { createGuard } from 'insightics-sql-guard';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { approve } from '../src/approve.js';
 import type { ColumnInfo, ForeignKey, TableInfo } from '../src/introspect/types.js';
@@ -219,23 +219,23 @@ describe('the write transaction', () => {
     const h = harness();
     const reader = asReaderSource(h.raw);
     await expect(
-      inWriteTransaction(reader as unknown as AdminSource, 'insightkit', async () => 1),
+      inWriteTransaction(reader as unknown as AdminSource, 'insightics', async () => 1),
     ).rejects.toThrow(/asAdminSource/);
     expect(h.log).toEqual([]);
-    await expect(inWriteTransaction(h.source, 'insightkit', async () => 1)).resolves.toBe(1);
+    await expect(inWriteTransaction(h.source, 'insightics', async () => 1)).resolves.toBe(1);
   });
 
   it('refuses an unbranded source that merely has the right shape', async () => {
     const h = harness();
     await expect(
-      inWriteTransaction(h.raw as unknown as AdminSource, 'insightkit', async () => 1),
+      inWriteTransaction(h.raw as unknown as AdminSource, 'insightics', async () => 1),
     ).rejects.toThrow(/asAdminSource/);
   });
 
   it('commits on success and never rolls back', async () => {
     const h = harness();
-    await inWriteTransaction(h.source, 'insightkit', async (run) => {
-      await run(composeStatement('SELECT 1 FROM "insightkit"."approved_query"', 'insightkit'));
+    await inWriteTransaction(h.source, 'insightics', async (run) => {
+      await run(composeStatement('SELECT 1 FROM "insightics"."approved_query"', 'insightics'));
     });
     expect(h.log[0]).toBe('BEGIN');
     expect(h.log.at(-1)).toBe('COMMIT');
@@ -246,7 +246,7 @@ describe('the write transaction', () => {
   it('rolls back and never commits when the body throws', async () => {
     const h = harness();
     await expect(
-      inWriteTransaction(h.source, 'insightkit', async () => {
+      inWriteTransaction(h.source, 'insightics', async () => {
         throw new Error('constraint violation');
       }),
     ).rejects.toThrow('constraint violation');
@@ -259,37 +259,37 @@ describe('the write transaction', () => {
       if (sql === 'ROLLBACK') throw new Error('connection reset');
       throw new Error('statement failed');
     });
-    await expect(inWriteTransaction(h.source, 'insightkit', async () => 1)).rejects.toThrow();
+    await expect(inWriteTransaction(h.source, 'insightics', async () => 1)).rejects.toThrow();
     expect(h.released).toEqual([true]);
   });
 
   it('scopes every setting to the transaction, so none leaks onto the next borrower', async () => {
     const h = harness();
-    await inWriteTransaction(h.source, 'insightkit', async () => 1);
+    await inWriteTransaction(h.source, 'insightics', async () => 1);
     const settings = h.log.filter((s) => /^SET\b/.test(s));
     expect(settings.length).toBeGreaterThan(0);
     for (const s of settings) expect(s.startsWith('SET LOCAL ')).toBe(true);
   });
 
   it('bounds the transaction and pins the search path away from pg_temp', () => {
-    const preamble = writePreamble('insightkit');
+    const preamble = writePreamble('insightics');
     expect(preamble).toContain("SET LOCAL statement_timeout = '10000ms'");
     expect(preamble).toContain("SET LOCAL lock_timeout = '2000ms'");
     expect(preamble).toContain("SET LOCAL idle_in_transaction_session_timeout = '10000ms'");
     expect(preamble).toContain('SET LOCAL standard_conforming_strings = on');
-    expect(preamble).toContain('SET LOCAL search_path = pg_catalog, "insightkit"');
+    expect(preamble).toContain('SET LOCAL search_path = pg_catalog, "insightics"');
     expect(preamble.join(' ')).not.toContain('pg_temp');
   });
 
   it('refuses a timeout outside the permitted range', () => {
-    expect(() => writePreamble('insightkit', { statementTimeoutMs: 0 })).toThrow(RangeError);
-    expect(() => writePreamble('insightkit', { lockTimeoutMs: 1.5 })).toThrow(RangeError);
+    expect(() => writePreamble('insightics', { statementTimeoutMs: 0 })).toThrow(RangeError);
+    expect(() => writePreamble('insightics', { lockTimeoutMs: 1.5 })).toThrow(RangeError);
   });
 
   it('only runs statements it composed itself', async () => {
     const h = harness();
     await expect(
-      inWriteTransaction(h.source, 'insightkit', async (run) => {
+      inWriteTransaction(h.source, 'insightics', async (run) => {
         const forged = { text: 'DROP TABLE users' } as unknown as Parameters<typeof run>[0];
         return run(forged);
       }),
@@ -299,15 +299,15 @@ describe('the write transaction', () => {
   });
 
   it('refuses to compose a statement that reaches outside the metadata schema', () => {
-    expect(() => composeStatement('DELETE FROM public.users', 'insightkit')).toThrow(/outside/);
-    expect(() => composeStatement('SELECT 1 FROM public.users', 'insightkit')).toThrow(/outside/);
+    expect(() => composeStatement('DELETE FROM public.users', 'insightics')).toThrow(/outside/);
+    expect(() => composeStatement('SELECT 1 FROM public.users', 'insightics')).toThrow(/outside/);
   });
 
   it('refuses a verb that is not on the allowlist', () => {
-    expect(() => composeStatement('DROP TABLE "insightkit"."approved_query"', 'insightkit')).toThrow(
+    expect(() => composeStatement('DROP TABLE "insightics"."approved_query"', 'insightics')).toThrow(
       /allowed verb/,
     );
-    expect(() => composeStatement('GRANT ALL ON "insightkit"."x" TO ik_reader', 'insightkit')).toThrow(
+    expect(() => composeStatement('GRANT ALL ON "insightics"."x" TO ik_reader', 'insightics')).toThrow(
       /allowed verb/,
     );
   });
@@ -332,7 +332,7 @@ describe('migrations', () => {
     exists: boolean;
   }
 
-  function ledgerFake(schema = 'insightkit'): Ledger {
+  function ledgerFake(schema = 'insightics'): Ledger {
     const state: Ledger = {
       applied: [],
       exists: false,
@@ -368,8 +368,8 @@ describe('migrations', () => {
     expect(report.bootstrapped).toBe(true);
     expect(report.applied).toEqual([{ version: 1, name: 'approved_query' }]);
     const created = ddl(fake.harness.log);
-    expect(created.some((s) => s.startsWith('CREATE SCHEMA IF NOT EXISTS "insightkit"'))).toBe(true);
-    expect(created.some((s) => s.includes('"insightkit"."approved_query"'))).toBe(true);
+    expect(created.some((s) => s.startsWith('CREATE SCHEMA IF NOT EXISTS "insightics"'))).toBe(true);
+    expect(created.some((s) => s.includes('"insightics"."approved_query"'))).toBe(true);
     expect(fake.harness.log.at(-1)).toBe('COMMIT');
   });
 
@@ -395,8 +395,8 @@ describe('migrations', () => {
 
   it('every migration statement is idempotent on its own', () => {
     for (const statement of [
-      ...bootstrapStatements('insightkit'),
-      ...firstMigration().statements('insightkit'),
+      ...bootstrapStatements('insightics'),
+      ...firstMigration().statements('insightics'),
     ]) {
       expect(statement).toMatch(/IF NOT EXISTS/);
     }
@@ -416,7 +416,7 @@ describe('migrations', () => {
     const fake = ledgerFake();
     fake.exists = true;
     fake.applied = [
-      { version: 1, name: 'approved_query', checksum: migrationChecksum(firstMigration(), 'insightkit') },
+      { version: 1, name: 'approved_query', checksum: migrationChecksum(firstMigration(), 'insightics') },
       { version: 99, name: 'from_the_future', checksum: 'f00d' },
     ];
     await expect(runMigrations(fake.harness.source)).rejects.toMatchObject({
@@ -458,7 +458,7 @@ describe('saving a plan', () => {
 
     const dml = h.log.filter((s) => /^(INSERT|UPDATE|DELETE|SELECT)/.test(s));
     expect(dml.length).toBeGreaterThan(0);
-    for (const s of dml) expect(s).toContain('"insightkit"."approved_query"');
+    for (const s of dml) expect(s).toContain('"insightics"."approved_query"');
     expect(h.log.some((s) => /\bpublic\b/.test(s))).toBe(false);
     expect(h.log.at(-1)).toBe('COMMIT');
   });
@@ -469,7 +469,7 @@ describe('saving a plan', () => {
     await store.save({ key: KEY_INPUT, query, chart: CHART });
     expect(h.log).toContain('SET LOCAL search_path = pg_catalog, "ik_meta"');
     expect(h.log.some((s) => s.includes('"ik_meta"."approved_query"'))).toBe(true);
-    expect(h.log.some((s) => s.includes('"insightkit"'))).toBe(false);
+    expect(h.log.some((s) => s.includes('"insightics"'))).toBe(false);
   });
 
   it('takes no SQL from the caller: the question is a literal, never a statement', async () => {
@@ -601,7 +601,7 @@ describe('looking a plan up', () => {
 
   it('says to migrate when the table or the whole schema is absent', async () => {
     const absent = [
-      new Error('relation "insightkit.approved_query" does not exist'),
+      new Error('relation "insightics.approved_query" does not exist'),
       Object.assign(new Error('nope'), { code: '42P01' }),
       Object.assign(new Error('nope'), { code: '3F000' }),
     ];
@@ -723,7 +723,7 @@ describe('invalidation', () => {
     await store.invalidateAll();
     await store.purgeExpired();
     for (const s of h.log.filter((x) => x.startsWith('DELETE'))) {
-      expect(s).toContain('"insightkit"."approved_query"');
+      expect(s).toContain('"insightics"."approved_query"');
     }
   });
 });
@@ -761,7 +761,7 @@ describe('the write path as a whole', () => {
   it('never names a schema other than the configured one', async () => {
     for (const s of await everyStatement()) {
       if (/^(INSERT|UPDATE|DELETE|SELECT|CREATE)/.test(s)) {
-        expect(s.includes('"insightkit"')).toBe(true);
+        expect(s.includes('"insightics"')).toBe(true);
       }
     }
   });

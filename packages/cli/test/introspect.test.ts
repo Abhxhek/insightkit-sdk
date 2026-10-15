@@ -84,10 +84,10 @@ describe('ik introspect', () => {
     expect(sent).toContain("nspname <> 'staging'");
   });
 
-  it('excludes insightkit by default', async () => {
+  it('excludes insightics by default', async () => {
     const { run, db } = introspect();
     await run();
-    expect(db.log.join('\n')).toContain("nspname <> 'insightkit'");
+    expect(db.log.join('\n')).toContain("nspname <> 'insightics'");
   });
 
   it('says so when a cap truncated the answer, in the output itself', async () => {

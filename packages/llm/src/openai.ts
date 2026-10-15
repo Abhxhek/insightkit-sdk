@@ -22,7 +22,7 @@ export interface OpenAIOptions {
 
 const DEFAULT_MAX_OUTPUT_TOKENS = 4096;
 const DEFAULT_TIMEOUT_MS = 60_000;
-const SCHEMA_NAME = 'insightkit_result';
+const SCHEMA_NAME = 'insightics_result';
 
 const usageOf = (usage: {
   prompt_tokens?: number;
@@ -60,7 +60,7 @@ export function openaiProvider(options: OpenAIOptions): Provider {
   if (typeof options.apiKey !== 'string' || options.apiKey.trim() === '') {
     throw new ModelError(
       'auth',
-      'an API key is required. InsightKit never supplies one: pass the key for the provider you chose.',
+      'an API key is required. Insightics never supplies one: pass the key for the provider you chose.',
     );
   }
   if (typeof options.model !== 'string' || options.model.trim() === '') {

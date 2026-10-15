@@ -1,7 +1,7 @@
-import { parseStreamEvent } from '@insightkit/protocol';
+import { parseStreamEvent } from 'insightics-protocol';
 import { describe, expect, it } from 'vitest';
-import { createInsightKit } from '../src/insightkit.js';
-import type { InsightKitConfig, InsightKitServer, LiveConfig } from '../src/types.js';
+import { createInsightics } from '../src/insightics.js';
+import type { InsighticsConfig, InsighticsServer, LiveConfig } from '../src/types.js';
 import {
   askRequest,
   draft,
@@ -20,19 +20,19 @@ const delay = (ms: number): Promise<void> => new Promise((resolve) => setTimeout
 const FAST: LiveConfig = { minIntervalMs: 20, defaultIntervalMs: 20, keepaliveMs: 1_000 };
 
 interface Harness {
-  readonly ik: InsightKitServer;
+  readonly ik: InsighticsServer;
   readonly database: ReturnType<typeof fakeDatabase>;
   readonly model: ReturnType<typeof fakeProvider>;
   readonly token: () => Promise<string>;
 }
 
 function harness(
-  over: Partial<InsightKitConfig> = {},
+  over: Partial<InsighticsConfig> = {},
   results?: readonly (readonly (readonly unknown[])[])[],
 ): Harness {
   const database = fakeDatabase(results === undefined ? {} : { results });
   const model = fakeProvider([draft()]);
-  const config: InsightKitConfig = {
+  const config: InsighticsConfig = {
     source: database.source,
     guard: fakeGuard(),
     provider: model.provider,
@@ -41,7 +41,7 @@ function harness(
     live: FAST,
     ...over,
   };
-  const ik = createInsightKit(config);
+  const ik = createInsightics(config);
   return {
     ik,
     database,

@@ -24,7 +24,7 @@ export {
 } from './config.js';
 export type { BodyOutcome } from './http.js';
 export { askError, askResponse, bearerToken, readJsonBody, streamProblem } from './http.js';
-export { createInsightKit } from './insightkit.js';
+export { createInsightics } from './insightics.js';
 export type { AdmitOutcome, Limiter, LimitsRuntime } from './limits.js';
 export { createLimiter, LIMIT_DEFAULTS, limitsRuntime } from './limits.js';
 export {
@@ -56,8 +56,8 @@ export type { StreamRegistry } from './subscribe.js';
 export { createStreamRegistry, handleSubscribe } from './subscribe.js';
 export type {
   Guard,
-  InsightKitConfig,
-  InsightKitServer,
+  InsighticsConfig,
+  InsighticsServer,
   LimitsConfig,
   LiveConfig,
   MultiTenant,

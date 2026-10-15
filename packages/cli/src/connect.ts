@@ -1,6 +1,6 @@
-import type { ConnectionSource } from '@insightkit/core';
-import type { PgPool } from '@insightkit/core/pg';
-import { fromPgPool } from '@insightkit/core/pg';
+import type { ConnectionSource } from 'insightics-core';
+import type { PgPool } from 'insightics-core/pg';
+import { fromPgPool } from 'insightics-core/pg';
 import { CannotRunError, messageOf } from './errors.js';
 import type { Output } from './output.js';
 import type { Redactor } from './redact.js';
@@ -90,7 +90,7 @@ export const openDatabase: Opener = async ({ urlEnv, timeoutMs, env }) => {
     driver = (await import(DRIVER)) as PoolModule;
   } catch {
     throw new CannotRunError(
-      'this command needs node-postgres, which is an optional peer dependency. Install pg alongside @insightkit/cli',
+      'this command needs node-postgres, which is an optional peer dependency. Install pg alongside insightics-cli',
     );
   }
 
@@ -100,7 +100,7 @@ export const openDatabase: Opener = async ({ urlEnv, timeoutMs, env }) => {
     connectionString: raw,
     connectionTimeoutMillis: timeoutMs,
     max: 1,
-    application_name: 'insightkit-cli',
+    application_name: 'insightics-cli',
   });
 
   return {

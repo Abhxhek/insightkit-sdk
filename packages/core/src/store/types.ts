@@ -1,4 +1,4 @@
-import type { DenyCode } from '@insightkit/sql-guard';
+import type { DenyCode } from 'insightics-sql-guard';
 import type { ForeignKey, TableInfo } from '../introspect/types.js';
 import type { ChartSpec } from '../plan/types.js';
 import type { Glossary } from '../semantic/types.js';

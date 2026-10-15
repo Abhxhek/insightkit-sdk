@@ -1,22 +1,22 @@
-# @insightkit/sql-guard
+# insightics-sql-guard
 
-The InsightKit security kernel. It takes a SQL string and returns a verdict: either SQL it is prepared to vouch for, or a deny code and a reason. It cannot run the query.
+The Insightics security kernel. It takes a SQL string and returns a verdict: either SQL it is prepared to vouch for, or a deny code and a reason. It cannot run the query.
 
 ## The boundary
 
-The kernel depends on `pgsql-parser` and nothing else. It may not import `pg`, any Node builtin that performs I/O, or any sibling `@insightkit/*` package. Two rules in [`.dependency-cruiser.cjs`](../../.dependency-cruiser.cjs) enforce that in CI rather than in review:
+The kernel depends on `pgsql-parser` and nothing else. It may not import `pg`, any Node builtin that performs I/O, or any sibling `insightics-*` package. Two rules in [`.dependency-cruiser.cjs`](../../.dependency-cruiser.cjs) enforce that in CI rather than in review:
 
 - **`kernel-no-io`** — no `fs`, `net`, `http`, `https`, `child_process`, `dgram`, `tls`, `dns`, `worker_threads`, `vm`, `cluster`, no `pg*`, no `axios`/`undici`/`node-fetch`.
 - **`kernel-no-siblings`** — no other workspace package.
 
-The reason is not tidiness. The component that decides whether SQL is safe must not be able to *act* on that decision — it returns a string and a different package runs it — and it has to be auditable without reading the rest of the repository. `pnpm --filter @insightkit/sql-guard list --prod --depth Infinity` reports **7 packages** — five distinct ones, since `@pgsql/types` is counted three times — all of them the Postgres parser and its parts. That is the whole trusted base.
+The reason is not tidiness. The component that decides whether SQL is safe must not be able to *act* on that decision — it returns a string and a different package runs it — and it has to be auditable without reading the rest of the repository. `pnpm --filter insightics-sql-guard list --prod --depth Infinity` reports **7 packages** — five distinct ones, since `@pgsql/types` is counted three times — all of them the Postgres parser and its parts. That is the whole trusted base.
 
 Changes here are gated by [`CODEOWNERS`](../../CODEOWNERS), as is [`test/corpus/`](./test/corpus).
 
 ## Install
 
 ```bash
-pnpm add @insightkit/sql-guard
+pnpm add insightics-sql-guard
 ```
 
 No peer dependencies. ESM only; the repository's engine floor is Node >= 20.11.
@@ -24,7 +24,7 @@ No peer dependencies. ESM only; the repository's engine floor is Node >= 20.11.
 ## Usage
 
 ```ts
-import { createGuard } from '@insightkit/sql-guard';
+import { createGuard } from 'insightics-sql-guard';
 
 // async once: this loads libpg_query, Postgres 18's own parser compiled to WebAssembly
 const guard = await createGuard({ allowedSchemas: ['public'], maxRows: 1000 });
@@ -64,7 +64,7 @@ guard('SELECT id FROM other.users');
 
 ## What it does not do
 
-- **It does not connect to anything.** The row cap travels inside the SQL it emits, so it is Postgres that enforces it — if anyone ever runs that SQL. Execution, roles and read-only transactions live in `@insightkit/core`.
+- **It does not connect to anything.** The row cap travels inside the SQL it emits, so it is Postgres that enforces it — if anyone ever runs that SQL. Execution, roles and read-only transactions live in `insightics-core`.
 - **It does not know your schema.** `allowedSchemas` / `allowedTables` are string comparisons against names in the parse tree. It cannot tell you a table exists, and it does no column-level policy at all — that gap is tracked as `column-policy` in the eval corpus.
 - **It does not bound cost.** A capped cross join still executes. That is `cost-ceiling`, also still open.
 - **It does not sanitise.** There is no repair, no rewriting of a hostile query into a safe one, no escaping. The only outcomes are the deparsed SQL or a denial.

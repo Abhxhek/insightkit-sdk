@@ -18,7 +18,7 @@ Three narrower cases sit inside the same problem:
 
 - **Column grants are real.** A role can hold `SELECT` on `users` and not on `users.ssn`. Filtering at table granularity advertises a column that was explicitly withheld.
 - **A foreign key names a second table.** A constraint on a visible table can point at a hidden one, so filtering only the near side discloses the far side's name through the relationship.
-- **Our own metadata schema is in the same database.** The model has no business knowing InsightKit's tables exist.
+- **Our own metadata schema is in the same database.** The model has no business knowing Insightics' tables exist.
 
 ## Decision
 

@@ -1,4 +1,4 @@
-import type { DenyCode } from '@insightkit/sql-guard';
+import type { DenyCode } from 'insightics-sql-guard';
 
 export interface PromptOptions {
   readonly guidance?: string;

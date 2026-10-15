@@ -9,7 +9,7 @@ const CONFIG: ProvisionConfig = {
   readerRole: 'ik_reader',
   loginRole: 'ik_sdk',
   metaRole: 'ik_meta',
-  metadataSchema: 'insightkit',
+  metadataSchema: 'insightics',
   connectionLimit: 10,
   validUntil: '2027-01-01',
 };
@@ -27,7 +27,7 @@ describe('provisioningScript', () => {
   it('separates the statements that affect roles other than ours', () => {
     const s = provisioningScript(CONFIG);
     expect(s.clusterWide.every((t) => /PUBLIC/.test(t))).toBe(true);
-    expect(s.scoped.some((t) => /FROM PUBLIC/.test(t) && !/insightkit/.test(t))).toBe(false);
+    expect(s.scoped.some((t) => /FROM PUBLIC/.test(t) && !/insightics/.test(t))).toBe(false);
   });
 
   it('strips every attribute that would defeat the other layers, on all three roles', () => {
@@ -48,7 +48,7 @@ describe('provisioningScript', () => {
   });
 
   it('keeps the reader out of the metadata schema', () => {
-    expect(all()).toContain('REVOKE ALL ON SCHEMA "insightkit" FROM "ik_reader"');
+    expect(all()).toContain('REVOKE ALL ON SCHEMA "insightics" FROM "ik_reader"');
   });
 
   it('covers tables created after provisioning', () => {

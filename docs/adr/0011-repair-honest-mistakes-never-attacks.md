@@ -40,7 +40,7 @@ The reason to refuse the first group is not safety. It is that repairing an atta
 
 Adding the planner surfaced a contradiction. The architecture table said `core` may import `llm`; the enforced rule `core-never-reaches-the-browser` forbade exactly that. Rule and prose disagreed, and the rule had never fired because nothing had tried.
 
-Resolved in favour of the rule, because weakening an enforced constraint to fit new code is the reflex this project exists to resist, and because `core` already has the pattern: `SqlClient` is declared structurally instead of importing `pg`. `ModelProvider` is now declared the same way. `core` takes on no dependency to reach a model, the planner is testable without one, and any client satisfying the shape works — `@insightkit/llm` merely happens to. A test asserts a real adapter still satisfies it, so the seam cannot drift silently.
+Resolved in favour of the rule, because weakening an enforced constraint to fit new code is the reflex this project exists to resist, and because `core` already has the pattern: `SqlClient` is declared structurally instead of importing `pg`. `ModelProvider` is now declared the same way. `core` takes on no dependency to reach a model, the planner is testable without one, and any client satisfying the shape works — `insightics-llm` merely happens to. A test asserts a real adapter still satisfies it, so the seam cannot drift silently.
 
 Provider errors are read by duck-typing `kind` rather than an `instanceof`, for the same reason.
 

@@ -1,4 +1,4 @@
-import type { Cell, ResultSet } from '@insightkit/protocol';
+import type { Cell, ResultSet } from 'insightics-protocol';
 import {
   type CSSProperties,
   type ReactElement,

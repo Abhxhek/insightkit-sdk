@@ -1,5 +1,5 @@
-import type { Check, CheckStatus, IsolationProof, RoleNames } from '@insightkit/core';
-import { isolationChecks, proveIsolation } from '@insightkit/core';
+import type { Check, CheckStatus, IsolationProof, RoleNames } from 'insightics-core';
+import { isolationChecks, proveIsolation } from 'insightics-core';
 import type { FlagSpecs } from '../args.js';
 import { parseFlags, takeFlag, takeNumber, takeString } from '../args.js';
 import type { Env, Opener } from '../connect.js';
@@ -48,7 +48,7 @@ export async function runDoctor(argv: readonly string[], deps: DoctorDeps): Prom
   const roles: RoleNames = {
     reader: takeString(flags, 'reader', 'ik_reader'),
     login: takeString(flags, 'login', 'ik_sdk'),
-    metadataSchema: takeString(flags, 'meta-schema', 'insightkit'),
+    metadataSchema: takeString(flags, 'meta-schema', 'insightics'),
   };
 
   let checks: readonly Check[];
@@ -75,7 +75,7 @@ export async function runDoctor(argv: readonly string[], deps: DoctorDeps): Prom
     await closeQuietly(connection, deps.out);
   }
 
-  emit(`InsightKit isolation proof - ${connection.label}`);
+  emit(`Insightics isolation proof - ${connection.label}`);
   emit(`roles under test: ${roles.reader}, ${roles.login}; metadata schema: ${roles.metadataSchema}`);
   emit('');
 

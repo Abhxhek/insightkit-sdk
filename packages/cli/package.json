@@ -1,9 +1,29 @@
 {
-  "name": "@insightkit/cli",
-  "version": "0.0.0",
+  "name": "insightics-cli",
+  "version": "1.0.1",
   "description": "ik init | doctor | introspect. A thin front end over the provisioning script and the isolation proofs core already exposes.",
+  "keywords": [
+    "insightics",
+    "analytics",
+    "text-to-sql",
+    "postgres",
+    "llm",
+    "cli"
+  ],
+  "homepage": "https://github.com/Abhxhek/insightkit-sdk/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/Abhxhek/insightkit-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abhxhek/insightkit-sdk.git",
+    "directory": "packages/cli"
+  },
   "license": "Apache-2.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.11.0"
+  },
   "bin": {
     "ik": "./dist/bin.js"
   },
@@ -21,7 +41,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@insightkit/core": "workspace:*"
+    "insightics-core": "workspace:*"
   },
   "peerDependencies": {
     "pg": "^8.11.0"

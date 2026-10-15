@@ -1,4 +1,4 @@
--- Reference schema for the InsightKit evaluation corpus.
+-- Reference schema for the Insightics evaluation corpus.
 -- Synthetic B2B SaaS. No customer data has ever been in this file and none may be added.
 -- The traps are deliberate: soft deletes, nullable timestamps, enums stored as text,
 -- two plausible "user" tables, a junction table, a denormalised counter that lies, money in cents.

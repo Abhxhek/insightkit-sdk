@@ -1,4 +1,4 @@
-import type { ChartSpec, ResultSet } from '@insightkit/protocol';
+import type { ChartSpec, ResultSet } from 'insightics-protocol';
 import type { CSSProperties, ReactElement } from 'react';
 import { BarChart } from './bar.js';
 import { formatNumber } from './coerce.js';

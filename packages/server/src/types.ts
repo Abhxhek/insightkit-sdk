@@ -10,7 +10,7 @@ import type {
   RetrieveOptions,
   ScopeResolver,
   SecurityEvent,
-} from '@insightkit/core';
+} from 'insightics-core';
 
 /** Taken off core's own dependency shape, because `server` does not depend on `sql-guard`. */
 export type Guard = PlanDeps['guard'];
@@ -112,7 +112,7 @@ export interface StreamStore {
   sweep(now: number): void;
 }
 
-export interface InsightKitConfig {
+export interface InsighticsConfig {
   readonly source: ReaderSource;
   readonly guard: Guard;
   readonly provider: ModelProvider;
@@ -142,7 +142,7 @@ export interface InsightKitConfig {
   readonly now?: () => number;
 }
 
-export interface InsightKitServer {
+export interface InsighticsServer {
   readonly ask: (request: Request) => Promise<Response>;
   readonly subscribe: (request: Request) => Promise<Response>;
   /** Routes on the last path segment, so it mounts under any base path. */
