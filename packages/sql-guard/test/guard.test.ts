@@ -133,8 +133,8 @@ describe('policy', () => {
     if (!v.ok) expect(v.code).toBe('E_SCHEMA_NOT_ALLOWED');
   });
 
-  it('blocks reads of the insightkit metadata schema when scoped to public', () => {
-    const v = guard('SELECT * FROM insightkit.sessions', { allowedSchemas: ['public'] });
+  it('blocks reads of the insightics metadata schema when scoped to public', () => {
+    const v = guard('SELECT * FROM insightics.sessions', { allowedSchemas: ['public'] });
     expect(v.ok).toBe(false);
   });
 });

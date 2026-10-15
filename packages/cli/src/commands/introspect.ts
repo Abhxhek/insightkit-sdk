@@ -1,5 +1,5 @@
-import type { DatabaseSchema, IntrospectOptions, ReadOptions } from '@insightkit/core';
-import { asReaderSource, introspectSchema, renderDatabase } from '@insightkit/core';
+import type { DatabaseSchema, IntrospectOptions, ReadOptions } from 'insightics-core';
+import { asReaderSource, introspectSchema, renderDatabase } from 'insightics-core';
 import type { FlagSpecs } from '../args.js';
 import { parseFlags, takeFlag, takeList, takeNumber, takeString } from '../args.js';
 import type { Env, Opener } from '../connect.js';
@@ -41,7 +41,7 @@ export async function runIntrospect(argv: readonly string[], deps: IntrospectDep
     return EXIT_OK;
   }
 
-  const metadataSchema = takeString(flags, 'meta-schema', 'insightkit');
+  const metadataSchema = takeString(flags, 'meta-schema', 'insightics');
   const restrictTo = takeList(flags, 'schema');
   const maxTables = takeNumber(flags, 'max-tables', 200, 1, 10_000);
   const maxColumns = takeNumber(flags, 'max-columns', 5000, 1, 200_000);

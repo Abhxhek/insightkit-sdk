@@ -12,7 +12,7 @@ const DARK = `--ik-surface:#1a1a19;--ik-ink:#ffffff;--ik-ink-2:#c3c2b7;--ik-mute
 --ik-s1:#3987e5;--ik-s2:#d95926;--ik-s3:#199e70;--ik-s4:#c98500;
 --ik-s5:#d55181;--ik-s6:#008300;--ik-s7:#9085e9;--ik-s8:#e66767;`;
 
-export const INSIGHTKIT_CSS = `
+export const INSIGHTICS_CSS = `
 .ik-root{color-scheme:light;${LIGHT}
 font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:13px;line-height:1.45;
 color:var(--ik-ink);background:var(--ik-surface);border:1px solid var(--ik-border);border-radius:10px;
@@ -76,4 +76,4 @@ background:var(--ik-wash);border:1px solid var(--ik-border);border-radius:6px;pa
 @media (forced-colors:active){.ik-mark,.ik-line{forced-color-adjust:none;}.ik-root{border-color:CanvasText;}}
 `;
 
-export const ChartStyles = (): ReactElement => <style>{INSIGHTKIT_CSS}</style>;
+export const ChartStyles = (): ReactElement => <style>{INSIGHTICS_CSS}</style>;

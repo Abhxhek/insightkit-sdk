@@ -18,7 +18,7 @@ describe('dispatch', () => {
     for (const argv of [['--help'], ['-h'], ['help']]) {
       const { out, code } = await run(argv);
       expect(code).toBe(EXIT_OK);
-      expect(out.stdout.join('\n')).toContain('ik - InsightKit');
+      expect(out.stdout.join('\n')).toContain('ik - Insightics');
       expect(out.stderr).toEqual([]);
     }
   });

@@ -1,5 +1,5 @@
-import type { Guard } from '@insightkit/sql-guard';
-import { createGuard } from '@insightkit/sql-guard';
+import type { Guard } from 'insightics-sql-guard';
+import { createGuard } from 'insightics-sql-guard';
 import pg from 'pg';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { approve } from '../src/approve.js';

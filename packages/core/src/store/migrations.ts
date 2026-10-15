@@ -114,7 +114,7 @@ function reconcile(schema: string, ledger: readonly LedgerRow[]): readonly Migra
     if (migration === undefined) {
       throw new StoreError(
         'E_MIGRATION_AHEAD',
-        `${schema} holds migration ${row.version} (${row.name}), which this version of InsightKit does not know; upgrade rather than downgrade`,
+        `${schema} holds migration ${row.version} (${row.name}), which this version of Insightics does not know; upgrade rather than downgrade`,
       );
     }
     const expected = migrationChecksum(migration, schema);

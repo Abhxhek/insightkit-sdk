@@ -1,5 +1,5 @@
-import type { StreamCloseReason, StreamEvent } from '@insightkit/protocol';
-import { PROTOCOL_VERSION, parseStreamEvent, parseSubscribeRequest } from '@insightkit/protocol';
+import type { StreamCloseReason, StreamEvent } from 'insightics-protocol';
+import { PROTOCOL_VERSION, parseStreamEvent, parseSubscribeRequest } from 'insightics-protocol';
 import { FALLBACK_IDENTITY } from './ask.js';
 import type { LiveRuntime, Runtime } from './config.js';
 import { clampInterval } from './config.js';

@@ -1,4 +1,4 @@
-import type { DenyCode, TableRef } from '@insightkit/sql-guard';
+import type { DenyCode, TableRef } from 'insightics-sql-guard';
 import type { GuardedQuery } from '../types.js';
 import type { ModelUsage } from './provider.js';
 

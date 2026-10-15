@@ -54,7 +54,7 @@ export function anthropicProvider(options: AnthropicOptions): Provider {
   if (typeof options.apiKey !== 'string' || options.apiKey.trim() === '') {
     throw new ModelError(
       'auth',
-      'an API key is required. InsightKit never supplies one: pass the key for the provider you chose.',
+      'an API key is required. Insightics never supplies one: pass the key for the provider you chose.',
     );
   }
   if (typeof options.model !== 'string' || options.model.trim() === '') {

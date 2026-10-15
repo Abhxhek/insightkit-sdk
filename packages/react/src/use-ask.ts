@@ -1,5 +1,5 @@
-import type { AskOkResponse } from '@insightkit/protocol';
-import { PROTOCOL_VERSION, parseAskResponse, protocolVersionOf } from '@insightkit/protocol';
+import type { AskOkResponse } from 'insightics-protocol';
+import { PROTOCOL_VERSION, parseAskResponse, protocolVersionOf } from 'insightics-protocol';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;

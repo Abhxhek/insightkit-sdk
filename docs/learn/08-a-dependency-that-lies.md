@@ -24,7 +24,7 @@ So: the developer picks provider, model and key. The error when they haven't doe
 
 That's not tidiness. It's the same boundary the whole architecture is built on: *the code that talks to an untrusted model does not sit next to the code that decides what is trusted.* Model output crosses that gap as a plain string and comes back as a verdict.
 
-There's a rule enforcing it. When adding this package I tested that the rule actually fires — and learned something: it didn't, at first, because `@insightkit/sql-guard` wasn't a dependency of `llm`, so the import was unresolvable and dependency-cruiser had nothing to classify. Adding the dependency and re-testing made it fire correctly. A rule you've never seen fail is a rule you don't know you have.
+There's a rule enforcing it. When adding this package I tested that the rule actually fires — and learned something: it didn't, at first, because `insightics-sql-guard` wasn't a dependency of `llm`, so the import was unresolvable and dependency-cruiser had nothing to classify. Adding the dependency and re-testing made it fire correctly. A rule you've never seen fail is a rule you don't know you have.
 
 ## Three replies that are not answers
 

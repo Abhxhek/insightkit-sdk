@@ -4,7 +4,7 @@ import { isolationChecks } from '../src/doctor/checks.js';
 import { proveIsolation } from '../src/doctor/run.js';
 import type { Check, QueryOutcome, SqlClient } from '../src/types.js';
 
-const ROLES = { reader: 'ik_reader', login: 'ik_sdk', metadataSchema: 'insightkit' };
+const ROLES = { reader: 'ik_reader', login: 'ik_sdk', metadataSchema: 'insightics' };
 const checks = isolationChecks(ROLES);
 const scopedChecks = isolationChecks({ ...ROLES, tenantScoping: true });
 
@@ -156,7 +156,7 @@ describe('the row security checks', () => {
 
   it('never ask about the metadata schema or the catalog', () => {
     for (const c of scopedChecks.filter((x) => x.id.startsWith('T') && x.id !== 'T4')) {
-      expect(c.sql).toContain("n.nspname <> 'insightkit'");
+      expect(c.sql).toContain("n.nspname <> 'insightics'");
       expect(c.sql).toContain("n.nspname NOT LIKE 'pg\\_%'");
     }
   });

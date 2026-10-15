@@ -1,4 +1,4 @@
-import type { Cell, ChartKind, ChartSpec, ResultSet } from '@insightkit/protocol';
+import type { Cell, ChartKind, ChartSpec, ResultSet } from 'insightics-protocol';
 import { formatNumber, isIsoish, toLabel, toNumber } from './coerce.js';
 
 export const MAX_SERIES = 8;

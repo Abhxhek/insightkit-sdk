@@ -3,7 +3,7 @@ import type { WebHandler } from './node.js';
 /**
  * A Next.js route handler already takes a `Request` and returns a `Response`, so this exists
  * to name the seam rather than to convert anything. Mount it in
- * `app/api/insightkit/[...route]/route.ts` and export it as POST and GET.
+ * `app/api/insightics/[...route]/route.ts` and export it as POST and GET.
  */
 export const toNextRouteHandler =
   (handler: WebHandler) =>

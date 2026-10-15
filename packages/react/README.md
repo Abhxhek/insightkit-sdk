@@ -1,35 +1,35 @@
-# @insightkit/react
+# insightics-react
 
 The component a developer drops into an admin panel. It posts a question to the server, renders the answer as hand-rolled SVG, and optionally follows it live.
 
 ## The boundary
 
-`@insightkit/protocol` and `react` are the entire import surface. `package.json` lists one dependency and one peer.
+`insightics-protocol` and `react` are the entire import surface. `package.json` lists one dependency and one peer.
 
-`react` may **never** import `@insightkit/core`. One `import { … } from '@insightkit/core'` inside a Next.js client component ships the database connection string into the browser bundle — not a leak that shows up in a test, a leak that shows up in someone's `main.js`. This package talks to the server over HTTP, never in process.
+`react` may **never** import `insightics-core`. One `import { … } from 'insightics-core'` inside a Next.js client component ships the database connection string into the browser bundle — not a leak that shows up in a test, a leak that shows up in someone's `main.js`. This package talks to the server over HTTP, never in process.
 
 Enforced three ways, each of which fails `pnpm verify`:
 
 - `.dependency-cruiser.cjs` — `browser-never-imports-engine` (`packages/react/src` must not reach `packages/(core|cli|server)`) and `browser-no-server-modules` (no `node:*`, no `pg`).
-- The typecheck. `react` does not declare `@insightkit/core`, so under pnpm's strict layout a bare import cannot resolve and fails with `TS2307` — before dependency-cruiser, which reports an unresolvable import as unresolved rather than as a violation.
-- `test/boundaries.test.ts` — walks every `.ts`/`.tsx` under `src/` and asserts the only `@insightkit/*` specifier anywhere is `@insightkit/protocol`, that the strings `@insightkit/core`, `@insightkit/cli` and `@insightkit/server` do not appear even in a comment, and that `dangerouslySetInnerHTML` is never used.
+- The typecheck. `react` does not declare `insightics-core`, so under pnpm's strict layout a bare import cannot resolve and fails with `TS2307` — before dependency-cruiser, which reports an unresolvable import as unresolved rather than as a violation.
+- `test/boundaries.test.ts` — walks every `.ts`/`.tsx` under `src/` and asserts the only `insightics-*` specifier anywhere is `insightics-protocol`, that the strings `insightics-core`, `insightics-cli` and `insightics-server` do not appear even in a comment, and that `dangerouslySetInnerHTML` is never used.
 
 ## Install
 
 ```sh
-pnpm add @insightkit/react
+pnpm add insightics-react
 ```
 
-Nothing is published to npm yet. `react >=18` is a peer dependency and is **not** optional. There is no charting dependency at all — the SVG is hand-rolled, and the stylesheet ships inside the component.
+`react >=18` is a peer dependency and is **not** optional. There is no charting dependency at all — the SVG is hand-rolled, and the stylesheet ships inside the component.
 
 ## Usage
 
 ```tsx
-import { Insight } from '@insightkit/react';
+import { Insight } from 'insightics-react';
 
 export const Panel = () => (
   <Insight
-    endpoint="/api/insightkit"
+    endpoint="/api/insightics"
     question="how many users joined this week, split by signup method"
     live
   />
@@ -40,7 +40,7 @@ export const Panel = () => (
 
 `live` only does something if the server was created with `live` enabled. Otherwise the answer carries no stream token, and the component renders it once without saying so.
 
-Lower level, if you want your own shell: `useAsk({ endpoint, question })` returns `{ state, reload }`, `useLiveResult({ endpoint, token })` returns `{ state, reconnect }`, and `<Chart spec={…} data={…} />` renders either on its own. `ChartStyles` and `INSIGHTKIT_CSS` are exported for hosts that would rather hoist the stylesheet than let every `Frame` emit it.
+Lower level, if you want your own shell: `useAsk({ endpoint, question })` returns `{ state, reload }`, `useLiveResult({ endpoint, token })` returns `{ state, reconnect }`, and `<Chart spec={…} data={…} />` renders either on its own. `ChartStyles` and `INSIGHTICS_CSS` are exported for hosts that would rather hoist the stylesheet than let every `Frame` emit it.
 
 ## What defines it
 
@@ -50,7 +50,7 @@ Lower level, if you want your own shell: `useAsk({ endpoint, question })` return
 
 **The browser is given a narrowing, and cannot ask for more.** [ADR 0012 — The wire is a narrowing](../../docs/adr/0012-the-wire-is-a-narrowing.md) means no deny code, no token count, no attempt history and no SQL unless the host opted in. `refused` is one generic sentence. `unanswerable` and `refused` render as `role="status"`; only a real breakage is `role="alert"` and only that offers a retry button.
 
-**A contract no test names is prose.** `react` and `server` once shipped mismatched endpoints with both suites green, because neither asserted a URL. `test/use-ask.test.tsx` now renders `<Insight>` through a spy `fetchImpl` and asserts the string `/api/insightkit/ask`.
+**A contract no test names is prose.** `react` and `server` once shipped mismatched endpoints with both suites green, because neither asserted a URL. `test/use-ask.test.tsx` now renders `<Insight>` through a spy `fetchImpl` and asserts the string `/api/insightics/ask`.
 
 ## What it does not do
 

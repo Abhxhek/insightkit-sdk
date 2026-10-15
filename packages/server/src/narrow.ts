@@ -1,6 +1,6 @@
-import type { ResultSet as CoreRows, ChartSpec as PlanChart, PlanResult, ReadResult } from '@insightkit/core';
-import type { AskResponse, Cell, ChartSpec, JsonValue, ResultSet } from '@insightkit/protocol';
-import { MAX_MESSAGE_LENGTH, PROTOCOL_VERSION } from '@insightkit/protocol';
+import type { ResultSet as CoreRows, ChartSpec as PlanChart, PlanResult, ReadResult } from 'insightics-core';
+import type { AskResponse, Cell, ChartSpec, JsonValue, ResultSet } from 'insightics-protocol';
+import { MAX_MESSAGE_LENGTH, PROTOCOL_VERSION } from 'insightics-protocol';
 
 /**
  * A refusal says nothing about why. `E_NOT_SELECT` reaching a browser tells an attacker the

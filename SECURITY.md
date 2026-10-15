@@ -1,6 +1,6 @@
 # Security policy
 
-InsightKit runs inside other people's production databases. A vulnerability here is a vulnerability in their systems, so we would rather hear about a suspected issue that turns out to be nothing than miss a real one.
+Insightics runs inside other people's production databases. A vulnerability here is a vulnerability in their systems, so we would rather hear about a suspected issue that turns out to be nothing than miss a real one.
 
 ## Reporting
 
@@ -20,7 +20,7 @@ Highest severity, in order:
 4. Tenant isolation failure — one tenant reading another's rows, given that the operator has written the row-level security policies described below.
 5. Credentials reaching the browser bundle, a log line, or an error message.
 6. Validator internals reaching a client — a deny code, a rejected statement, or the guard's own wording. These tell an attacker that their probe was detected *and how it was classified*, which turns the error channel into a map of the defence.
-7. A write reaching the `insightkit` metadata schema from anything carrying user-authored SQL, or a cached plan that executes without being re-validated.
+7. A write reaching the `insightics` metadata schema from anything carrying user-authored SQL, or a cached plan that executes without being re-validated.
 
 Denial of service through an expensive but legitimate query is handled by `statement_timeout` and the row cap, not by the guard. Report it if you can exceed those, not if a query is merely slow.
 
@@ -28,7 +28,7 @@ Denial of service through an expensive but legitimate query is handled by `state
 
 **In scope:** everything under `packages/`.
 
-**Out of scope:** misconfiguration in a consuming application — granting `ik_reader` write privileges, running InsightKit as a superuser, or exposing the server handler without authentication. `ik doctor` exists to catch these; if it passes while the configuration is unsafe, that **is** in scope — with one documented exception: it does not check the cluster-wide section of `ik init`, the grants that fence off `PUBLIC`.
+**Out of scope:** misconfiguration in a consuming application — granting `ik_reader` write privileges, running Insightics as a superuser, or exposing the server handler without authentication. `ik doctor` exists to catch these; if it passes while the configuration is unsafe, that **is** in scope — with one documented exception: it does not check the cluster-wide section of `ik init`, the grants that fence off `PUBLIC`.
 
 **Also out of scope, and important to understand:** tenant scoping is enforced by Postgres row-level security, not by rewriting SQL. The SDK sets a session variable; the database applies the policy. On a table where the operator has **not** written a policy, that variable is inert and every user sees every row — with no error at query time. This is a documented property, not a defect. `ik doctor` reports it as a review finding, which fails the run only under `--strict` — the CLI cannot tell that tenant scoping is in use — so a multi-tenant deployment should run `ik doctor --strict`. The operator must write, on every readable table:
 
@@ -55,7 +55,7 @@ Independent defences. None is load-bearing alone, and a finding that defeats one
 | Row-level security | enforced by Postgres on every access path, including subqueries and CTEs |
 | The wire contract | failures cross as coarse statuses; deny codes and token counts do not |
 
-A second guarantee runs beside the first: InsightKit's own metadata writes use a separate role, touch only the `insightkit` schema, and never carry user-authored SQL. A cached plan is re-validated through the guard on the way out, so a tampered metadata row cannot produce unguarded SQL.
+A second guarantee runs beside the first: Insightics' own metadata writes use a separate role, touch only the `insightics` schema, and never carry user-authored SQL. A cached plan is re-validated through the guard on the way out, so a tampered metadata row cannot produce unguarded SQL.
 
 ## What has and has not been verified
 
@@ -66,3 +66,5 @@ Being explicit, because it changes how much weight to put on the above.
 **Not verified against a live system:** everything that depends on a server responding. `BEGIN READ ONLY` refusing a write, the provisioning script's grants, the catalog queries, the row-level security checks, and every claim about how Postgres behaves are reasoned about and parse-checked, not observed. No Testcontainers suite exists yet.
 
 Treat the database-side layers as designed rather than proven until that changes.
+
+**Releases:** 1.0.1 was published from a developer machine, so it carries no npm provenance attestation linking the tarball to a commit. Later releases are meant to come from CI with provenance.

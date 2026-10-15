@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { PROTOCOL_VERSION } from '@insightkit/protocol';
+
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { PROTOCOL_VERSION } from 'insightics-protocol';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { EventSourceLike } from '../src/use-live-result.js';

@@ -1,4 +1,4 @@
-import type { AskOkResponse, ResultSet } from '@insightkit/protocol';
+import type { AskOkResponse, ResultSet } from 'insightics-protocol';
 import { type CSSProperties, type ReactElement, useRef } from 'react';
 import { Chart } from './chart.js';
 import { Frame, type Theme } from './frame.js';

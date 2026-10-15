@@ -1,4 +1,4 @@
-import type { Cell } from '@insightkit/protocol';
+import type { Cell } from 'insightics-protocol';
 
 /**
  * Decimal or scientific notation only: `Number` would also accept `0x1f`, `0b1`, `Infinity`

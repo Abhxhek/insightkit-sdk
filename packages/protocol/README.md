@@ -1,19 +1,19 @@
-# @insightkit/protocol
+# insightics-protocol
 
-The wire contract between an InsightKit browser client and an InsightKit server: zod schemas, the types inferred from them, and parse functions that return a result instead of throwing.
+The wire contract between an Insightics browser client and an Insightics server: zod schemas, the types inferred from them, and parse functions that return a result instead of throwing.
 
 ## The boundary
 
 `protocol` depends on `zod` and nothing else. It may not import a Node builtin, a database driver, or any other workspace package — `protocol-stays-portable` in [`.dependency-cruiser.cjs`](../../.dependency-cruiser.cjs) forbids all three, because the same module is bundled into a browser and loaded on a server, and anything that only runs in one of those places breaks the other.
 
-`pnpm --filter @insightkit/protocol list --prod --depth Infinity` reports **1 package**: `zod@4.6.5`.
+`pnpm --filter insightics-protocol list --prod --depth Infinity` reports **1 package**: `zod@4.6.5`.
 
-The more important boundary is the one in the *shapes*. `protocol` is a narrowing of what the server knows, not a re-export of it. There is no deny code on the wire, no token count, no attempt history, and no SQL unless the host opts in. `@insightkit/core` does not depend on this package at all: it declares its own `ChartSpec` and `ResultSet`, alongside a `PlanResult` carrying attempt history, token usage and guard deny codes. Translating the first two and dropping the rest is a deliberate step in `@insightkit/server`.
+The more important boundary is the one in the *shapes*. `protocol` is a narrowing of what the server knows, not a re-export of it. There is no deny code on the wire, no token count, no attempt history, and no SQL unless the host opts in. `insightics-core` does not depend on this package at all: it declares its own `ChartSpec` and `ResultSet`, alongside a `PlanResult` carrying attempt history, token usage and guard deny codes. Translating the first two and dropping the rest is a deliberate step in `insightics-server`.
 
 ## Install
 
 ```bash
-pnpm add @insightkit/protocol
+pnpm add insightics-protocol
 ```
 
 No peer dependencies. Isomorphic — no Node builtins, no DOM.
@@ -21,7 +21,7 @@ No peer dependencies. Isomorphic — no Node builtins, no DOM.
 ## Usage
 
 ```ts
-import { parseAskResponse, PROTOCOL_VERSION } from '@insightkit/protocol';
+import { parseAskResponse, PROTOCOL_VERSION } from 'insightics-protocol';
 
 PROTOCOL_VERSION; // 1
 
@@ -51,7 +51,7 @@ Four response shapes discriminated on `status` — `ok`, `unanswerable`, `refuse
 
 **Strict objects, because strictness protects the sender.** Every object schema is `z.strictObject`, so an unexpected key is an error rather than something quietly stripped. Stripping protects the *receiving* end — by which point the JSON has already crossed. Being strict turns a leak into a 500 on the server that was about to commit it. See [ADR 0012 — The wire is a narrowing, not a re-export](../../docs/adr/0012-the-wire-is-a-narrowing.md).
 
-**Statuses are deliberately uninformative.** `refused` and `unanswerable` and `error` each carry one prose `message` and nothing else. `E_NOT_SELECT` arriving at a client would tell an attacker their probe was detected *and classified*, which is an oracle; so would an HTTP status that varied by outcome, which is why `@insightkit/server` answers 200 for all four. Same ADR 0012.
+**Statuses are deliberately uninformative.** `refused` and `unanswerable` and `error` each carry one prose `message` and nothing else. `E_NOT_SELECT` arriving at a client would tell an attacker their probe was detected *and classified*, which is an oracle; so would an HTTP status that varied by outcome, which is why `insightics-server` answers 200 for all four. Same ADR 0012.
 
 **Cells are JSON values, never `Date`.** `Cell` is `JsonValue`. The reader path hands `date`, `time`, `timestamp`, `interval`, `bytea`, `numeric` and the float types over as the text Postgres sent, so a `Date` reaching this layer means a driver conversion escaped — see [ADR 0007 — Values that a driver cannot convert losslessly cross the boundary as text](../../docs/adr/0007-driver-values-cross-the-boundary-as-text.md). `StreamSnapshot.at` is an ISO 8601 *string* for the same reason.
 

@@ -1,12 +1,12 @@
-# InsightKit
+# Insightics
 
 Prompt-driven, real-time analytics you can embed in a Node application in an afternoon.
 
 Point it at your Postgres database, drop a component into your admin panel, and your users ask questions in plain language — *"how many users joined this week, split by signup method"* — and get a live chart back. No API to write, no dashboard to wire up, no component to design.
 
-> **Status: pre-alpha. Nothing is published to npm.**
+> **Status: published as 1.0.1, and still unproven against a real database.**
 >
-> All eight packages are built and the suite is green. But **nothing in this project has ever run against a real Postgres or a real model.** Every test uses a recording fake. The evaluation corpus exists and has scored exactly zero cases, because scoring requires executing queries against real data.
+> Seven packages are on npm and the suite is green. But **nothing in this project has ever run against a real Postgres or a real model.** Every test uses a recording fake. The evaluation corpus exists and has scored exactly zero cases, because scoring requires executing queries against real data.
 >
 > So the engineering is production-shaped and the central product claim — that it answers *correctly* — is unmeasured. We would rather say that than let a test count imply otherwise.
 
@@ -14,7 +14,7 @@ Point it at your Postgres database, drop a component into your admin panel, and 
 
 **SQL derived from a user prompt can only read. There is no exception.**
 
-InsightKit runs inside your production database. A write that escapes would be data loss in a system we do not own and cannot restore. So the read-only guarantee is not a setting, a policy or a code review convention — it is a stack of independent mechanisms, none of which is load-bearing alone:
+Insightics runs inside your production database. A write that escapes would be data loss in a system we do not own and cannot restore. So the read-only guarantee is not a setting, a policy or a code review convention — it is a stack of independent mechanisms, none of which is load-bearing alone:
 
 | Layer | Enforces |
 |---|---|
@@ -27,7 +27,7 @@ InsightKit runs inside your production database. A write that escapes would be d
 
 `ik doctor` verifies the database-side guarantees against the live catalog rather than asking you to trust them, and exits non-zero when the proof fails — so it belongs in CI.
 
-A second guarantee runs beside the first: InsightKit's own metadata writes use a **different role**, touch only the `insightkit` schema, and never carry user-authored SQL. That one is enforced in code — the store accepts only an admin connection and no SQL string — and is not yet checked by `ik doctor`.
+A second guarantee runs beside the first: Insightics' own metadata writes use a **different role**, touch only the `insightics` schema, and never carry user-authored SQL. That one is enforced in code — the store accepts only an admin connection and no SQL string — and is not yet checked by `ik doctor`.
 
 ## How a question becomes a chart
 
@@ -48,30 +48,34 @@ A second guarantee runs beside the first: InsightKit's own metadata writes use a
 
 ## Quick start
 
+```bash
+npm install insightics-server insightics-core insightics-sql-guard insightics-llm insightics-react pg @anthropic-ai/sdk
+```
+
 Server — one handler, mounted wherever you like:
 
 ```ts
 import {
-  createInsightKit,
+  createInsightics,
   singleTenant,
   SINGLE_TENANT_ACKNOWLEDGEMENT,
   toNextRoute,
-} from '@insightkit/server';
-import { asReaderSource, introspectSchema } from '@insightkit/core';
-import { fromPgPool } from '@insightkit/core/pg';
-import { anthropicProvider } from '@insightkit/llm/anthropic';
-import { createGuard } from '@insightkit/sql-guard';
+} from 'insightics-server';
+import { asReaderSource, introspectSchema } from 'insightics-core';
+import { fromPgPool } from 'insightics-core/pg';
+import { anthropicProvider } from 'insightics-llm/anthropic';
+import { createGuard } from 'insightics-sql-guard';
 import { Pool } from 'pg';
 
 const source = asReaderSource(
   fromPgPool(new Pool({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 5_000 })),
 );
 
-const ik = createInsightKit({
+const ik = createInsightics({
   source,
   guard: await createGuard({ maxRows: 1000 }),
   provider: anthropicProvider({ apiKey: process.env.ANTHROPIC_API_KEY!, model: 'claude-opus-5' }),
-  schema: () => introspectSchema(source, { excludeSchemas: ['insightkit'] }),
+  schema: () => introspectSchema(source, { excludeSchemas: ['insightics'] }),
   tenancy: singleTenant(SINGLE_TENANT_ACKNOWLEDGEMENT),
   live: {},
 });
@@ -82,9 +86,9 @@ export const { GET, POST } = toNextRoute(ik.handler);
 Browser — one component:
 
 ```tsx
-import { Insight } from '@insightkit/react';
+import { Insight } from 'insightics-react';
 
-<Insight endpoint="/api/insightkit" question="how many users signed up this week, by signup method" live />
+<Insight endpoint="/api/insightics" question="how many users signed up this week, by signup method" live />
 ```
 
 `tenancy` is required and has no default. The single-tenant option demands that exact sentence rather than a boolean, because a boolean reads as a shrug in review and *"every user of this app may read every row"* reads as what it means. For multi-tenant, `multiTenantFromJwt()` verifies a bearer token and carries the tenant into the transaction, where Postgres row-level security enforces it.
@@ -96,7 +100,7 @@ import { Insight } from '@insightkit/react';
 The component that decides whether SQL is safe is a package that **cannot execute SQL, cannot open a socket, and cannot read the filesystem**. It takes a string and returns a verdict. Something else runs the query.
 
 ```ts
-import { createGuard } from '@insightkit/sql-guard';
+import { createGuard } from 'insightics-sql-guard';
 
 const guard = await createGuard({ allowedSchemas: ['public'] });
 
@@ -157,7 +161,7 @@ pnpm verify     # build + typecheck + lint + dependency rules + tests. The gate.
 
 The evaluation corpus lives in [`packages/eval`](./packages/eval) — a reference schema, a golden question set, and the scorer. It deliberately contains adversarial cases the product does **not** yet block; each names the component that will block it, and asserts the gap is still open so it cannot be closed silently.
 
-Once you have a Postgres, `pnpm --filter @insightkit/core smoke` turns the outstanding claims into observations — starting with whether `BEGIN READ ONLY` actually refuses a write.
+Once you have a Postgres, `pnpm --filter insightics-core smoke` turns the outstanding claims into observations — starting with whether `BEGIN READ ONLY` actually refuses a write.
 
 ## Documentation
 

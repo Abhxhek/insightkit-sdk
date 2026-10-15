@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import { PROTOCOL_VERSION } from '@insightkit/protocol';
+
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { PROTOCOL_VERSION } from 'insightics-protocol';
 import type { ReactElement } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Insight } from '../src/insight.js';
@@ -190,9 +191,9 @@ describe('Insight', () => {
         reply({ status: 'ok', protocol: PROTOCOL_VERSION, chart, data, truncated: false }),
       );
     };
-    render(<Insight endpoint="/api/insightkit" question="how many" fetchImpl={spy} />);
+    render(<Insight endpoint="/api/insightics" question="how many" fetchImpl={spy} />);
     await waitFor(() => {
-      expect(seen).toContain('/api/insightkit/ask');
+      expect(seen).toContain('/api/insightics/ask');
     });
   });
 
@@ -204,9 +205,9 @@ describe('Insight', () => {
         reply({ status: 'ok', protocol: PROTOCOL_VERSION, chart, data, truncated: false }),
       );
     };
-    render(<Insight endpoint="/api/insightkit/" question="how many" fetchImpl={spy} />);
+    render(<Insight endpoint="/api/insightics/" question="how many" fetchImpl={spy} />);
     await waitFor(() => {
-      expect(seen).toContain('/api/insightkit/ask');
+      expect(seen).toContain('/api/insightics/ask');
     });
   });
 

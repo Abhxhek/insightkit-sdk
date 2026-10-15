@@ -1,4 +1,4 @@
-import type { Guard, Policy } from '@insightkit/sql-guard';
+import type { Guard, Policy } from 'insightics-sql-guard';
 import { approve, isGuardedQuery } from '../approve.js';
 import type { ChartSpec } from '../plan/types.js';
 import { CHART_KINDS } from '../plan/types.js';

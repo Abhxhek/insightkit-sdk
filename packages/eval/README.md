@@ -1,10 +1,10 @@
-# @insightkit/eval
+# insightics-eval
 
 The release gate: a reference schema, a golden question set, an adversarial corpus, and the scorer that turns a run over them into a verdict. **Never published.**
 
 ## The boundary
 
-`@insightkit/sql-guard` is the only workspace package `eval` depends on; everything else it scores, it scores through a public API the caller injects. Three rules keep the gate honest about what it is measuring, each confirmed to fire by writing the offending import into a scratch tree and cruising it:
+`insightics-sql-guard` is the only workspace package `eval` depends on; everything else it scores, it scores through a public API the caller injects. Three rules keep the gate honest about what it is measuring, each confirmed to fire by writing the offending import into a scratch tree and cruising it:
 
 - `nothing-ships-the-harness` — no package may import `packages/eval/`. A gate is not a dependency. If a published package could reach the harness, the thing measuring the release would be part of the release.
 - `eval-src-is-pure` — no Node builtin in `src`. The clock and all I/O are injected, so scoring re-runs from a results file without re-spending tokens. The corpus is read with `node:fs` in `test/`, which the rule deliberately leaves alone — the same import is an error one directory up and clean here.
@@ -14,10 +14,10 @@ The release gate: a reference schema, a golden question set, an adversarial corp
 
 ## Install
 
-You do not. `@insightkit/eval` is private and nothing may depend on it. It runs from inside the repo:
+You do not. `insightics-eval` is private and nothing may depend on it. It runs from inside the repo:
 
 ```sh
-pnpm --filter @insightkit/eval test
+pnpm --filter insightics-eval test
 ```
 
 ## Usage
@@ -25,7 +25,7 @@ pnpm --filter @insightkit/eval test
 `src` has no I/O, so `run` and `sleep` are yours. `run` is where a case actually reaches a model and a database.
 
 ```ts
-import { evaluateGate, resultSetsEqual, runCorpus } from '@insightkit/eval';
+import { evaluateGate, resultSetsEqual, runCorpus } from 'insightics-eval';
 
 const run = await runCorpus(cases, { run: executeCase, sleep }, { concurrency: 5, spendCapUsd: 20 });
 

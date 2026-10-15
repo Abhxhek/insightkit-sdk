@@ -27,7 +27,7 @@ Note also what the `package.json` says:
 "files": ["dist"]
 ```
 
-`exports` means consumers can import `@insightkit/sql-guard` and nothing else. They cannot reach into `dist/guard.js` and depend on an internal — Node refuses. Without it, every file in your package is public API whether you meant it or not. `files` keeps tests and sources out of the published tarball.
+`exports` means consumers can import `insightics-sql-guard` and nothing else. They cannot reach into `dist/guard.js` and depend on an internal — Node refuses. Without it, every file in your package is public API whether you meant it or not. `files` keeps tests and sources out of the published tarball.
 
 ## 3. Your dependencies become their dependencies
 

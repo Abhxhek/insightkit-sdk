@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { createInsightKit } from '../src/insightkit.js';
+import { createInsightics } from '../src/insightics.js';
 import { askRequest, draft, fakeDatabase, fakeProvider, singleTenantConfig } from './fake.js';
 
 const DENY_CODES = [
@@ -26,7 +26,7 @@ const DENY_CODES = [
 const INTERNALS = ['attempts', 'usage', 'inputTokens', 'outputTokens', 'fake-1', 'reason'];
 
 const serialised = async (script: readonly unknown[], over = {}): Promise<string> => {
-  const ik = createInsightKit(singleTenantConfig(over, { script }));
+  const ik = createInsightics(singleTenantConfig(over, { script }));
   const response = await ik.ask(askRequest('how many users signed up'));
   return JSON.stringify(await response.json());
 };
@@ -76,7 +76,7 @@ describe('what never crosses the wire', () => {
   });
 
   it('drops the driver detail from a thrown read', async () => {
-    const ik = createInsightKit(
+    const ik = createInsightics(
       singleTenantConfig({}, { database: fakeDatabase({ failReads: true }), script: [draft()] }),
     );
     const text = JSON.stringify(await (await ik.ask(askRequest('how many users'))).json());
@@ -86,7 +86,7 @@ describe('what never crosses the wire', () => {
 
   it('keeps an unvalidatable response off the wire as a 500', async () => {
     const database = fakeDatabase({ results: [[[new Date('2026-09-05T00:00:00Z'), 1]]] });
-    const ik = createInsightKit(singleTenantConfig({}, { database, script: [draft()] }));
+    const ik = createInsightics(singleTenantConfig({}, { database, script: [draft()] }));
     const response = await ik.ask(askRequest('how many users'));
     expect(response.status).toBe(200);
     const payload = JSON.parse(await response.text()) as { status: string };
@@ -95,7 +95,7 @@ describe('what never crosses the wire', () => {
 
   it('never reports a model failure as a refusal', async () => {
     const model = fakeProvider([{ not: 'a plan' }]);
-    const ik = createInsightKit(singleTenantConfig({}, { provider: model }));
+    const ik = createInsightics(singleTenantConfig({}, { provider: model }));
     const answer = (await (await ik.ask(askRequest('how many users'))).json()) as { status: string };
     expect(answer.status).toBe('error');
   });

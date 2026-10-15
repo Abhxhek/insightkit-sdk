@@ -2,7 +2,7 @@ import { handleAsk } from './ask.js';
 import { createRuntime } from './config.js';
 import { askError } from './http.js';
 import { createStreamRegistry, handleSubscribe } from './subscribe.js';
-import type { InsightKitConfig, InsightKitServer } from './types.js';
+import type { InsighticsConfig, InsighticsServer } from './types.js';
 
 const lastSegment = (url: string): string => {
   const path = new URL(url).pathname;
@@ -10,7 +10,7 @@ const lastSegment = (url: string): string => {
   return parts[parts.length - 1] ?? '';
 };
 
-export function createInsightKit(config: InsightKitConfig): InsightKitServer {
+export function createInsightics(config: InsighticsConfig): InsighticsServer {
   const rt = createRuntime(config);
   const registry = createStreamRegistry();
 

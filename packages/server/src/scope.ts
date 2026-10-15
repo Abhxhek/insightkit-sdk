@@ -5,14 +5,14 @@ import type {
   ReadResult,
   SessionSetting,
   TenantScope,
-} from '@insightkit/core';
-import { isIdentityError, runGuardedRead } from '@insightkit/core';
+} from 'insightics-core';
+import { isIdentityError, runGuardedRead } from 'insightics-core';
 import type { TenancyConfig } from './types.js';
 import { SINGLE_TENANT_ACKNOWLEDGEMENT } from './types.js';
 
 declare const SCOPED: unique symbol;
 
-export const SCOPE_BRAND = Symbol.for('insightkit.server.scope');
+export const SCOPE_BRAND = Symbol.for('insightics.server.scope');
 
 /**
  * The proof that a request became a tenant. Only the two producers below can mint one, and

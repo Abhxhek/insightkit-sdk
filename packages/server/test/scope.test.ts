@@ -1,8 +1,8 @@
-import { IdentityError, sessionPreamble } from '@insightkit/core';
+import { IdentityError, sessionPreamble } from 'insightics-core';
 import { describe, expect, it } from 'vitest';
-import { createInsightKit } from '../src/insightkit.js';
+import { createInsightics } from '../src/insightics.js';
 import { isReadScope, runScopedRead, tenantReadScope, unscopedReadScope } from '../src/scope.js';
-import type { InsightKitConfig } from '../src/types.js';
+import type { InsighticsConfig } from '../src/types.js';
 import { SINGLE_TENANT_ACKNOWLEDGEMENT } from '../src/types.js';
 import {
   askRequest,
@@ -18,11 +18,11 @@ import {
 } from './fake.js';
 
 const multiConfig = (
-  over: Partial<InsightKitConfig> = {},
+  over: Partial<InsighticsConfig> = {},
   tokens: Readonly<Record<string, ReturnType<typeof scopeFor> | Error>> = { good: scopeFor(TENANT) },
   script: readonly unknown[] = [draft()],
 ): {
-  config: InsightKitConfig;
+  config: InsighticsConfig;
   database: ReturnType<typeof fakeDatabase>;
   model: ReturnType<typeof fakeProvider>;
 } => {
@@ -46,12 +46,12 @@ describe('an unscoped read cannot happen by accident', () => {
   it('refuses a configuration with no tenancy at all', () => {
     const base = singleTenantConfig();
     const { tenancy: _dropped, ...rest } = base;
-    expect(() => createInsightKit(rest as InsightKitConfig)).toThrow(/tenancy is required/);
+    expect(() => createInsightics(rest as InsighticsConfig)).toThrow(/tenancy is required/);
   });
 
   it('refuses a single-tenant declaration that does not say the words', () => {
     expect(() =>
-      createInsightKit(singleTenantConfig({ tenancy: { mode: 'single', acknowledge: 'sure' } as never })),
+      createInsightics(singleTenantConfig({ tenancy: { mode: 'single', acknowledge: 'sure' } as never })),
     ).toThrow(/acknowledgement/);
   });
 
@@ -74,7 +74,7 @@ describe('an unscoped read cannot happen by accident', () => {
 
   it('runs no query at all when a multi-tenant request carries no token', async () => {
     const { config, database, model } = multiConfig();
-    const ik = createInsightKit(config);
+    const ik = createInsightics(config);
 
     const response = await ik.ask(askRequest('how many users'));
 
@@ -86,7 +86,7 @@ describe('an unscoped read cannot happen by accident', () => {
 
   it('sets the tenant setting inside the sealed transaction for a verified token', async () => {
     const { config, database } = multiConfig();
-    const ik = createInsightKit(config);
+    const ik = createInsightics(config);
 
     const response = await ik.ask(askRequest('how many users', 'good'));
 
@@ -99,7 +99,7 @@ describe('an unscoped read cannot happen by accident', () => {
 
   it('runs with no scope statement for a host that declared single-tenant mode', async () => {
     const database = fakeDatabase();
-    const ik = createInsightKit(singleTenantConfig({}, { database }));
+    const ik = createInsightics(singleTenantConfig({}, { database }));
 
     const response = await ik.ask(askRequest('how many users'));
 
@@ -119,7 +119,7 @@ describe('mapping an identity failure to a status', () => {
         stale: new IdentityError('E_TOKEN_EXPIRED', 'token rejected: "exp" claim timestamp check failed'),
       },
     );
-    const ik = createInsightKit(config);
+    const ik = createInsightics(config);
 
     const response = await ik.ask(askRequest('how many users', 'stale'));
 
@@ -130,7 +130,7 @@ describe('mapping an identity failure to a status', () => {
 
   it('answers 401 for a signature that does not verify', async () => {
     const { config } = multiConfig();
-    const ik = createInsightKit(config);
+    const ik = createInsightics(config);
     expect((await ik.ask(askRequest('how many users', 'forged'))).status).toBe(401);
   });
 
@@ -141,7 +141,7 @@ describe('mapping an identity failure to a status', () => {
         anonymous: new IdentityError('E_TENANT_CLAIM_MISSING', 'claim "org" is missing or unusable (absent)'),
       },
     );
-    const ik = createInsightKit(config);
+    const ik = createInsightics(config);
 
     const response = await ik.ask(askRequest('how many users', 'anonymous'));
 
@@ -156,7 +156,7 @@ describe('mapping an identity failure to a status', () => {
         broken: new IdentityError('E_SETTING_NAME_UNSAFE', 'unsafe session setting name: row_security'),
       },
     );
-    const ik = createInsightKit(config);
+    const ik = createInsightics(config);
 
     const response = await ik.ask(askRequest('how many users', 'broken'));
 

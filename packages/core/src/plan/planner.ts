@@ -1,4 +1,4 @@
-import type { DenyCode, Guard, Policy } from '@insightkit/sql-guard';
+import type { DenyCode, Guard, Policy } from 'insightics-sql-guard';
 import { approve } from '../approve.js';
 import { repairTurn, systemPrompt } from './prompt.js';
 import type { ModelMessage, ModelProvider, ModelUsage } from './provider.js';

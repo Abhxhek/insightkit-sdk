@@ -1,6 +1,6 @@
 import { quoteIdent } from '../sql.js';
 
-export const DEFAULT_METADATA_SCHEMA = 'insightkit';
+export const DEFAULT_METADATA_SCHEMA = 'insightics';
 export const MIGRATION_TABLE = 'schema_migrations';
 export const APPROVED_QUERY_TABLE = 'approved_query';
 

@@ -13,7 +13,7 @@ const DEFAULT_IDLE_TIMEOUT_MS = 10_000;
 
 declare const STATEMENT: unique symbol;
 
-export const STATEMENT_BRAND = Symbol.for('insightkit.store.statement');
+export const STATEMENT_BRAND = Symbol.for('insightics.store.statement');
 
 export interface Statement {
   readonly text: string;

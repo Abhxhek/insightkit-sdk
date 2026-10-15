@@ -26,11 +26,11 @@ describe('the browser package stays in the browser', () => {
     expect(files.length).toBeGreaterThan(8);
   });
 
-  it('imports no @insightkit package but protocol', () => {
+  it('imports no insightics package but protocol', () => {
     for (const path of files) {
       for (const specifier of specifiersOf(readFileSync(path, 'utf8'))) {
-        if (specifier.startsWith('@insightkit/')) {
-          expect(`${path}: ${specifier}`).toBe(`${path}: @insightkit/protocol`);
+        if (specifier.startsWith('insightics-')) {
+          expect(`${path}: ${specifier}`).toBe(`${path}: insightics-protocol`);
         }
       }
     }
@@ -39,9 +39,9 @@ describe('the browser package stays in the browser', () => {
   it('never names core, cli or server anywhere in its source', () => {
     for (const path of files) {
       const source = readFileSync(path, 'utf8');
-      expect(source).not.toContain('@insightkit/core');
-      expect(source).not.toContain('@insightkit/cli');
-      expect(source).not.toContain('@insightkit/server');
+      expect(source).not.toContain('insightics-core');
+      expect(source).not.toContain('insightics-cli');
+      expect(source).not.toContain('insightics-server');
     }
   });
 

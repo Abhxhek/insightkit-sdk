@@ -37,8 +37,8 @@ The React package defaulted its endpoints to `endpoint` and `` `${endpoint}/stre
 Both suites were green. Neither could see it, because React injects a fake `fetch` and the server is handed a `Request` — **no test on either side asserted the URL**, so the contract lived only in two agents' heads and they disagreed.
 
 ```
-react  POST  /api/insightkit          server  listens on  …/ask
-react  SSE   /api/insightkit/stream   server  listens on  …/subscribe
+react  POST  /api/insightics          server  listens on  …/ask
+react  SSE   /api/insightics/stream   server  listens on  …/subscribe
 ```
 
 A host following both packages' own documentation would have got a 404 on their first request.

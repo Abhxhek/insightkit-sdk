@@ -11,9 +11,9 @@ import type {
   SqlClient,
   TableInfo,
   TenantScope,
-} from '@insightkit/core';
-import { asReaderSource, IdentityError } from '@insightkit/core';
-import type { Guard, InsightKitConfig } from '../src/types.js';
+} from 'insightics-core';
+import { asReaderSource, IdentityError } from 'insightics-core';
+import type { Guard, InsighticsConfig } from '../src/types.js';
 import { SINGLE_TENANT_ACKNOWLEDGEMENT } from '../src/types.js';
 
 const col = (name: string, dataType = 'text'): ColumnInfo => ({
@@ -176,9 +176,9 @@ export interface BaseOptions {
 }
 
 export function singleTenantConfig(
-  over: Partial<InsightKitConfig> = {},
+  over: Partial<InsighticsConfig> = {},
   base: BaseOptions = {},
-): InsightKitConfig {
+): InsighticsConfig {
   const database = base.database ?? fakeDatabase();
   const model = base.provider ?? fakeProvider(base.script ?? [draft()]);
   return {
@@ -192,7 +192,7 @@ export function singleTenantConfig(
 }
 
 export const askRequest = (question: string, token?: string): Request =>
-  new Request('http://host.test/api/insightkit/ask', {
+  new Request('http://host.test/api/insightics/ask', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
@@ -202,7 +202,7 @@ export const askRequest = (question: string, token?: string): Request =>
   });
 
 export const subscribeRequest = (token: string, bearer?: string, intervalMs?: number): Request =>
-  new Request('http://host.test/api/insightkit/subscribe', {
+  new Request('http://host.test/api/insightics/subscribe', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',

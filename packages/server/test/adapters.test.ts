@@ -6,10 +6,10 @@ import { toHonoHandler } from '../src/adapters/hono.js';
 import { toNextRoute } from '../src/adapters/next.js';
 import type { NodeResponseLike } from '../src/adapters/node.js';
 import { toNodeHandler } from '../src/adapters/node.js';
-import { createInsightKit } from '../src/insightkit.js';
+import { createInsightics } from '../src/insightics.js';
 import { askRequest, draft, fakeDatabase, singleTenantConfig } from './fake.js';
 
-const ik = createInsightKit(
+const ik = createInsightics(
   singleTenantConfig(
     { live: { minIntervalMs: 20, defaultIntervalMs: 20, maxDurationMs: 80, keepaliveMs: 1_000 } },
     { script: Array.from({ length: 10 }, () => draft()), database: fakeDatabase() },
@@ -22,7 +22,7 @@ const node = toNodeHandler(ik.handler);
 const server = createServer((request, response) => void node(request, response));
 await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
 const port = (server.address() as AddressInfo).port;
-const base = `http://127.0.0.1:${port}/api/insightkit`;
+const base = `http://127.0.0.1:${port}/api/insightics`;
 
 afterAll(async () => {
   await ik.close();
