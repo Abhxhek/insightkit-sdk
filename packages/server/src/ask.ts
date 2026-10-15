@@ -1,6 +1,6 @@
-import type { GuardedQuery, SecurityEvent } from '@insightkit/core';
-import { expandQuestion, planQuery, renderGlossary, selectTables } from '@insightkit/core';
-import { parseAskRequest } from '@insightkit/protocol';
+import type { GuardedQuery, SecurityEvent } from 'insightics-core';
+import { expandQuestion, planQuery, renderGlossary, selectTables } from 'insightics-core';
+import { parseAskRequest } from 'insightics-protocol';
 import type { Runtime } from './config.js';
 import { askError, askResponse, readJsonBody } from './http.js';
 import { errorResponse, failureResponse, okResponse, sanitiseMessage } from './narrow.js';

@@ -1,9 +1,30 @@
 {
-  "name": "@insightkit/protocol",
-  "version": "0.0.0",
+  "name": "insightics-protocol",
+  "version": "1.0.1",
   "description": "The wire contract between browser and server. Deliberately narrower than what the server knows: a deny code, a token count or a SQL string must not cross to a client unless the host opts in.",
+  "keywords": [
+    "insightics",
+    "analytics",
+    "text-to-sql",
+    "postgres",
+    "llm",
+    "zod",
+    "schema"
+  ],
+  "homepage": "https://github.com/Abhxhek/insightkit-sdk/tree/main/packages/protocol#readme",
+  "bugs": {
+    "url": "https://github.com/Abhxhek/insightkit-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abhxhek/insightkit-sdk.git",
+    "directory": "packages/protocol"
+  },
   "license": "Apache-2.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.11.0"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

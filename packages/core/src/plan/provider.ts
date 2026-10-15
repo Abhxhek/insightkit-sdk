@@ -1,9 +1,9 @@
 /**
  * What the planner needs from a model client, defined here rather than imported from
- * `@insightkit/llm` for the same reason `SqlClient` is not imported from `pg`: the
+ * `insightics-llm` for the same reason `SqlClient` is not imported from `pg`: the
  * planner stays testable without a provider, a second client is an implementation of
  * an interface rather than a rewrite, and core takes on no dependency to reach a model.
- * `@insightkit/llm` satisfies this shape structurally.
+ * `insightics-llm` satisfies this shape structurally.
  */
 export interface ModelUsage {
   readonly inputTokens: number;
@@ -39,7 +39,7 @@ export interface ModelProvider {
 
 /**
  * Reads the failure kind off a provider error without knowing the class, so a caller
- * can supply any client. Adapters in `@insightkit/llm` carry `kind` and `retryable`.
+ * can supply any client. Adapters in `insightics-llm` carry `kind` and `retryable`.
  */
 export function failureKind(err: unknown): string | null {
   if (typeof err !== 'object' || err === null) return null;

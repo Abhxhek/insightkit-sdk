@@ -1,5 +1,5 @@
-import type { StreamCloseReason, StreamSnapshot } from '@insightkit/protocol';
-import { parseStreamEvent } from '@insightkit/protocol';
+import type { StreamCloseReason, StreamSnapshot } from 'insightics-protocol';
+import { parseStreamEvent } from 'insightics-protocol';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface EventSourceLike {

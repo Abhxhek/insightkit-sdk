@@ -1,22 +1,22 @@
-# @insightkit/cli
+# insightics-cli
 
-`ik` — three commands for a human at a terminal. `init` prints the SQL a DBA runs to create InsightKit's roles, `doctor` proves against the live catalog that the reader cannot write, `introspect` prints the schema the reader can see.
+`ik` — three commands for a human at a terminal. `init` prints the SQL a DBA runs to create Insightics' roles, `doctor` proves against the live catalog that the reader cannot write, `introspect` prints the schema the reader can see.
 
 ## The boundary
 
-`@insightkit/core` is the only workspace package the CLI depends on; its other imports are `node:*` and, dynamically, `pg`. Three dependency-cruiser rules apply, each confirmed to fire by writing the offending import into a scratch tree and cruising it:
+`insightics-core` is the only workspace package the CLI depends on; its other imports are `node:*` and, dynamically, `pg`. Three dependency-cruiser rules apply, each confirmed to fire by writing the offending import into a scratch tree and cruising it:
 
 - `nothing-imports-the-cli` — no package may import `packages/cli/`. It is a leaf: a front end over `core` for a person at a terminal, never a library another package builds on.
 - `cli-never-reaches-the-browser` — `packages/cli/src` must not reach `packages/react/`. The CLI holds connection material and runs on a developer machine; it has no business in a bundle.
-- `core-is-the-only-database-package` — which also applies here. A static `import { Pool } from 'pg'` anywhere in `packages/cli/src` fails CI. The driver is reached instead through `await import(DRIVER)` with `DRIVER` a non-literal const, resolved when a command actually needs a connection. `core` stays the one place a connection is opened, and the CLI gets its pool from `fromPgPool` on the `@insightkit/core/pg` subpath.
+- `core-is-the-only-database-package` — which also applies here. A static `import { Pool } from 'pg'` anywhere in `packages/cli/src` fails CI. The driver is reached instead through `await import(DRIVER)` with `DRIVER` a non-literal const, resolved when a command actually needs a connection. `core` stays the one place a connection is opened, and the CLI gets its pool from `fromPgPool` on the `insightics-core/pg` subpath.
 
 ## Install
 
 ```sh
-pnpm add -D @insightkit/cli pg
+pnpm add -D insightics-cli pg
 ```
 
-Nothing is published to npm yet. `pg ^8.11.0` is an **optional** peer dependency. `ik init` connects to nothing and needs no driver at all; `ik doctor` and `ik introspect` exit 3 with `this command needs node-postgres, which is an optional peer dependency` when `pg` is absent.
+`pg ^8.11.0` is an **optional** peer dependency. `ik init` connects to nothing and needs no driver at all; `ik doctor` and `ik introspect` exit 3 with `this command needs node-postgres, which is an optional peer dependency` when `pg` is absent.
 
 ## Usage
 

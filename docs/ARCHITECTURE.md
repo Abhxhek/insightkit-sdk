@@ -1,8 +1,8 @@
-# InsightKit — architecture and constraints
+# Insightics — architecture and constraints
 
-This document is the compressed reference for how InsightKit is put together and which rules are not negotiable. It is aimed at anyone reading or contributing to the codebase.
+This document is the compressed reference for how Insightics is put together and which rules are not negotiable. It is aimed at anyone reading or contributing to the codebase.
 
-InsightKit is an open-source TypeScript SDK that embeds prompt-driven, real-time analytics into an existing Node application. A developer points it at their Postgres database, drops a React component into their admin panel, and their users ask questions in natural language — "how many users joined this week, split by signup method" — and get a live chart back.
+Insightics is an open-source TypeScript SDK that embeds prompt-driven, real-time analytics into an existing Node application. A developer points it at their Postgres database, drops a React component into their admin panel, and their users ask questions in natural language — "how many users joined this week, split by signup method" — and get a live chart back.
 
 The product replaces the usual loop of: write an API, wire it to a dashboard, fetch, design a component, ship.
 
@@ -10,12 +10,12 @@ The product replaces the usual loop of: write an API, wire it to a dashboard, fe
 
 **User-originated SQL is SELECT-only. There is no exception to this.**
 
-Everything else in the product is negotiable. This is not. InsightKit runs inside other people's production databases; a write that escapes the guard is data loss in a system we do not own and cannot restore.
+Everything else in the product is negotiable. This is not. Insightics runs inside other people's production databases; a write that escapes the guard is data loss in a system we do not own and cannot restore.
 
 This creates an apparent contradiction the architecture has to resolve rather than hand-wave: the product must also *write* its own metadata (sessions, cached results, migrations). Two independently verifiable guarantees, never one:
 
 - **G1** — SQL derived from a user prompt can only read. Enforced by the `sql-guard` kernel, a dedicated `ik_reader` role with only `GRANT SELECT`, and a sealed read-only transaction.
-- **G2** — InsightKit's own metadata writes go through a separate `ik_meta` role, touch only the `insightkit` schema, and never carry user-authored SQL.
+- **G2** — Insightics' own metadata writes go through a separate `ik_meta` role, touch only the `insightics` schema, and never carry user-authored SQL.
 
 `ik doctor` proves G1 against the live catalog — including that the reader cannot reach the metadata schema — and exits non-zero when the proof fails. G2 is enforced in code: the store and its migrations refuse anything but an `AdminSource`, and the store's API accepts no SQL string. No doctor check yet confirms that the metadata role is confined to its own schema.
 
@@ -39,9 +39,9 @@ packages/
 
 | Package | May import | Must never import |
 |---|---|---|
-| `sql-guard` | `pgsql-parser` and nothing else | `pg`, `node:*`, any `@insightkit/*` |
+| `sql-guard` | `pgsql-parser` and nothing else | `pg`, `node:*`, any `insightics-*` |
 | `protocol` | `zod` | anything server-side |
-| `core` | `sql-guard`, `jose`, `pg` (optional peer, behind the `@insightkit/core/pg` subpath) | `react`, **`llm`**, and in practice `protocol` — it declares its own `ChartSpec` and `ResultSet` |
+| `core` | `sql-guard`, `jose`, `pg` (optional peer, behind the `insightics-core/pg` subpath) | `react`, **`llm`**, and in practice `protocol` — it declares its own `ChartSpec` and `ResultSet` |
 | `llm` | no workspace package; `@anthropic-ai/sdk` and `openai` as optional peers | `pg`, `sql-guard`, `core` |
 | `react` | `protocol`, and `react` as a peer | **`core`**, `server`, `cli`, Node builtins, `pg` |
 | `cli` | `core`, `node:*`; `pg` loaded at runtime and handed straight to `fromPgPool` | `react`, a static `pg` import; and nothing may import `cli` |
@@ -52,7 +52,7 @@ A forbidden import of a sibling package fails `pnpm verify` by one of two routes
 
 Three rows carry real weight:
 
-- **`react` must never reach `core`.** One `import { Engine } from '@insightkit/core'` in a Next.js client component ships the database URL into the browser bundle. Defended two ways: an `exports` map with no mixed root barrel, and an enforced dependency rule. (A `server-only` import in `core`'s entrypoint was planned as a third and has not been added.)
+- **`react` must never reach `core`.** One `import { Engine } from 'insightics-core'` in a Next.js client component ships the database URL into the browser bundle. Defended two ways: an `exports` map with no mixed root barrel, and an enforced dependency rule. (A `server-only` import in `core`'s entrypoint was planned as a third and has not been added.)
 - **`core` must never reach `llm` either.** It declares the provider shape structurally, as it does for `pg`, so reaching a model costs no dependency and any client satisfying the shape works.
 - **`llm` must never reach `sql-guard`.** The code that talks to an untrusted model does not sit next to the code that decides what is trusted. Model output crosses that gap as a string and returns as a verdict.
 
@@ -115,7 +115,7 @@ Core is where G1 stops being a claim about SQL text and becomes a claim about th
 5. **`pg_temp` is off the search path** — a writable temp schema on the path is the CVE-2018-1058 shadowing vector.
 6. **Fail closed on interpolation.** `SET LOCAL` cannot take bind parameters, so identifiers are validated against a strict pattern and timeouts against a range. Throw, never escape.
 7. **A check that could not run is a failure.** Otherwise a locked-down database produces a green proof by refusing to answer.
-8. **No driver dependency.** Core defines the client shape structurally, so it is testable without a database and a second driver is an interface implementation rather than a rewrite. Rows must be arrays: object rows collapse `SELECT a.id, b.id` to one key. The node-postgres adapter lives behind the `@insightkit/core/pg` subpath with `pg` as an *optional* peer dependency, so the main entry never references a driver.
+8. **No driver dependency.** Core defines the client shape structurally, so it is testable without a database and a second driver is an interface implementation rather than a rewrite. Rows must be arrays: object rows collapse `SELECT a.id, b.id` to one key. The node-postgres adapter lives behind the `insightics-core/pg` subpath with `pg` as an *optional* peer dependency, so the main entry never references a driver.
 9. **Lossy driver conversions cross the boundary as text.** node-postgres turns a `date` into a JS `Date` at local midnight, so `2026-09-05` serialises to the 4th anywhere east of UTC — a wrong axis with no error, dependent on the server's timezone. `date`, `time`, `timestamp` (with and without zone), `interval`, `bytea` and `numeric[]` are returned as the text Postgres sent, and so are `float4` and `float8`, because `JSON.stringify` turns `NaN` and `Infinity` into `null`; everything the driver gets right is left alone. The registry is per-query — `pg.types.setTypeParser` is global and would change the host application's own queries. See ADR 0007.
 10. **Introspection describes what the reader can see.** Every catalog query filters on `has_schema_privilege` / `has_table_privilege` / `has_column_privilege`, both ends of a foreign key are checked, and the metadata schema is excluded. Describing a withheld table puts its name and columns into a prompt, which is a disclosure even though no row leaks. Keys come from `pg_constraint.conkey` (a real `int2[]`) rather than `pg_index.indkey`. Results are capped, and each query selects one row past the cap so truncation is observed rather than inferred. See ADR 0008.
 11. **Retrieval is lexical and deterministic, for now.** The schema reaches a prompt as Postgres DDL with comments and row estimates kept, and a foreign key is rendered only when both tables are present. Tables are scored by token overlap with the question, a match pulls in its foreign key neighbours so a join is expressible, and `matched: false` is reported rather than a fallback being passed off as a hit. The token budget is checked by rendering the candidate set, not by estimating from metadata. Vocabulary mismatch (`monthly recurring revenue` vs `mrr_cents`) is a known gap and belongs to the semantic layer. See ADR 0009.
@@ -144,7 +144,7 @@ Where a question becomes SQL. The first component whose quality is a measurement
 4. **`answerable: false` is a first-class outcome.** Without it, a model asked something the schema cannot answer invents a query and returns a confident wrong chart. `answerable: true` with no SQL is an invalid plan, not a refusal — those are different things and conflating them tells the user something untrue.
 5. **The question is a user turn, never part of the instructions.** Hygiene, not defence; the guard is what stops an injected write.
 6. **The plan schema is flat, every field required, nulls where inapplicable.** Strict structured outputs reject optional properties and providers disagree most about nullable nested objects.
-7. **`core` declares `ModelProvider` structurally** rather than importing `@insightkit/llm`, for the same reason `SqlClient` is not imported from `pg`. Provider errors are duck-typed on `kind`. A test asserts a real adapter still satisfies the shape.
+7. **`core` declares `ModelProvider` structurally** rather than importing `insightics-llm`, for the same reason `SqlClient` is not imported from `pg`. Provider errors are duck-typed on `kind`. A test asserts a real adapter still satisfies the shape.
 8. **Every attempt is recorded** — SQL, outcome, deny code, tokens — so a poor eval score is attributable rather than merely disappointing.
 
 ## What crosses a boundary (`protocol`, `identity`, `semantic`, `cli`)
@@ -181,16 +181,16 @@ Four surfaces where information leaves our hands. Each is decided by what must *
 
 ## State
 
-All eight packages are built and green: `sql-guard` (security kernel), `eval` (release gate), `llm` (provider adapters), `protocol` (wire contract), `cli` (`ik init | doctor | introspect`), `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, retrieval, planner, tenant identity, semantic layer, approved-query store), `server` (HTTP and SSE handlers) and `react` (component, hooks, SVG charts). Nothing is published to npm.
+All eight packages are built and green: `sql-guard` (security kernel), `eval` (release gate), `llm` (provider adapters), `protocol` (wire contract), `cli` (`ik init | doctor | introspect`), `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, retrieval, planner, tenant identity, semantic layer, approved-query store), `server` (HTTP and SSE handlers) and `react` (component, hooks, SVG charts). The seven public packages are on npm as `insightics-*@1.0.1`; `eval` stays private. 1.0.1 was published from a developer machine with a token, so it carries no provenance — moving releases to CI trusted publishing is outstanding.
 
 `server` wires the planner, the semantic layer, tenant scoping and the reader path together and closes the unscoped-read fail-open for its own callers; `runGuardedRead` accepts a scope but does not *require* one, so a host using `core` directly must re-invent that obligation. The planner has never run against a real model or database, so accuracy is unmeasured.
 
-**Nothing has run against a real Postgres.** Core is tested against a recording fake and, for the adapter, against node-postgres' own `Result` parser — which proves what we send, what we refuse, and how the driver converts, but not how a server responds. `pnpm --filter @insightkit/core smoke` turns the outstanding claims into observations against a live database; it is the first thing to run once one exists. Testcontainers e2e remains the highest-value work.
+**Nothing has run against a real Postgres.** Core is tested against a recording fake and, for the adapter, against node-postgres' own `Result` parser — which proves what we send, what we refuse, and how the driver converts, but not how a server responds. `pnpm --filter insightics-core smoke` turns the outstanding claims into observations against a live database; it is the first thing to run once one exists. Testcontainers e2e remains the highest-value work.
 
 Known gaps where packages meet:
 
 - **`ik doctor` cannot be told that tenant scoping is in use.** Core's `isolationChecks` takes `tenantScoping` to make the row-security checks blocking, but the CLI has no flag for it, so a database with row security off everywhere exits 0 unless `--strict` is passed.
-- **Live updates are off unless the server enables them, and nothing says so.** `<Insight live />` streams only when `createInsightKit` is given `live`. Without it, `ask` issues no stream token and the chart quietly renders once.
+- **Live updates are off unless the server enables them, and nothing says so.** `<Insight live />` streams only when `createInsightics` is given `live`. Without it, `ask` issues no stream token and the chart quietly renders once.
 - **Live updates in multi-tenant mode need `tokenFrom`.** `subscribe` resolves the tenant from the same bearer token `ask` does, and a browser `EventSource` cannot send an `Authorization` header — so with the defaults a multi-tenant subscription is refused with 401.
 - **A subscription's scope is resolved once, when the stream opens.** A token revoked mid-stream keeps streaming until `maxDurationMs` expires. See ADR 0015.
 

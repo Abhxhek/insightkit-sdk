@@ -29,7 +29,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@insightkit/core':
+      insightics-core:
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -42,19 +42,19 @@ importers:
 
   packages/core:
     dependencies:
-      '@insightkit/sql-guard':
+      insightics-sql-guard:
         specifier: workspace:*
         version: link:../sql-guard
       jose:
         specifier: ^6.1.0
         version: 6.2.12
     devDependencies:
-      '@insightkit/llm':
-        specifier: workspace:*
-        version: link:../llm
       '@types/pg':
         specifier: ^8.11.10
         version: 8.23.1
+      insightics-llm:
+        specifier: workspace:*
+        version: link:../llm
       pg:
         specifier: ^8.23.0
         version: 8.23.0
@@ -64,7 +64,7 @@ importers:
 
   packages/eval:
     dependencies:
-      '@insightkit/sql-guard':
+      insightics-sql-guard:
         specifier: workspace:*
         version: link:../sql-guard
     devDependencies:
@@ -89,7 +89,7 @@ importers:
 
   packages/react:
     dependencies:
-      '@insightkit/protocol':
+      insightics-protocol:
         specifier: workspace:*
         version: link:../protocol
     devDependencies:
@@ -111,10 +111,10 @@ importers:
 
   packages/server:
     dependencies:
-      '@insightkit/core':
+      insightics-core:
         specifier: workspace:*
         version: link:../core
-      '@insightkit/protocol':
+      insightics-protocol:
         specifier: workspace:*
         version: link:../protocol
 

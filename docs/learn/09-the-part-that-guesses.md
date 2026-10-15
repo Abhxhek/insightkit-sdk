@@ -104,7 +104,7 @@ export interface ModelProvider {
 }
 ```
 
-`core` now takes on **no dependency** to reach a model. `@insightkit/llm` merely happens to satisfy the shape — and a test asserts it still does, so the seam can't drift in silence. Provider errors are read by duck-typing `kind` rather than `instanceof`, for the same reason.
+`core` now takes on **no dependency** to reach a model. `insightics-llm` merely happens to satisfy the shape — and a test asserts it still does, so the seam can't drift in silence. Provider errors are read by duck-typing `kind` rather than `instanceof`, for the same reason.
 
 The doc was the thing that was wrong, and it's fixed.
 

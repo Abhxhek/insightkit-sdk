@@ -1,4 +1,4 @@
-import type { ConnectionSource, SqlClient } from '@insightkit/core';
+import type { ConnectionSource, SqlClient } from 'insightics-core';
 import type { CliDeps } from '../src/cli.js';
 import type { Connection, Env, Opener, OpenOptions } from '../src/connect.js';
 import type { Output } from '../src/output.js';

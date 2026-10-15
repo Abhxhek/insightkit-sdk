@@ -10,7 +10,7 @@ The decision that shapes everything else is who supplies the credential.
 
 ## Decision
 
-**The developer supplies the provider, the model and the key. InsightKit never ships one.**
+**The developer supplies the provider, the model and the key. Insightics never ships one.**
 
 The alternative considered was a "free default" so the SDK works with no configuration. It does not survive contact with the details. A free *tier* still needs a key, so either we embed ours — public the moment the repository is pushed, scraped within hours, and billed to us until it is revoked — or the user supplies one anyway and the default saved nothing.
 
@@ -38,7 +38,7 @@ So configuration is required, and the error when it is missing does the teaching
 
 **Usage is reported on every call.** The eval harness already has a spend cap with nothing to feed it.
 
-**The provider SDK is an optional peer dependency**, exactly as `pg` is for `core`. Install `@insightkit/llm`, pull in only the provider you actually use.
+**The provider SDK is an optional peer dependency**, exactly as `pg` is for `core`. Install `insightics-llm`, pull in only the provider you actually use.
 
 ## Consequences
 

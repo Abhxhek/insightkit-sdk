@@ -1,4 +1,4 @@
-import { PROTOCOL_VERSION } from '@insightkit/protocol';
+import { PROTOCOL_VERSION } from 'insightics-protocol';
 
 export type WebHandler = (request: Request) => Promise<Response>;
 
@@ -77,7 +77,7 @@ export async function toWebRequest(
   signal: AbortSignal,
 ): Promise<Request | null> {
   const method = (request.method ?? 'GET').toUpperCase();
-  const url = new URL(request.url ?? '/', originOf(request, options.origin ?? 'http://insightkit.invalid'));
+  const url = new URL(request.url ?? '/', originOf(request, options.origin ?? 'http://insightics.invalid'));
   const headers = toHeaders(request.headers);
   if (HEADERLESS.has(method)) return new Request(url, { method, headers, signal });
 

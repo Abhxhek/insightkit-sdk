@@ -1,5 +1,5 @@
-import type { ProvisionConfig, ProvisionScript } from '@insightkit/core';
-import { provisioningScript } from '@insightkit/core';
+import type { ProvisionConfig, ProvisionScript } from 'insightics-core';
+import { provisioningScript } from 'insightics-core';
 import type { FlagSpecs } from '../args.js';
 import { parseFlags, takeFlag, takeNumber, takeString } from '../args.js';
 import { EXIT_OK, messageOf, UsageError } from '../errors.js';
@@ -48,7 +48,7 @@ export function runInit(argv: readonly string[], deps: InitDeps): number {
     readerRole: takeString(flags, 'reader', 'ik_reader'),
     loginRole: takeString(flags, 'login', 'ik_sdk'),
     metaRole: takeString(flags, 'meta-role', 'ik_meta'),
-    metadataSchema: takeString(flags, 'meta-schema', 'insightkit'),
+    metadataSchema: takeString(flags, 'meta-schema', 'insightics'),
     connectionLimit: takeNumber(flags, 'connection-limit', 5, 1, 1000),
     validUntil: takeString(flags, 'valid-until', oneYearOn(deps.now)),
   };
@@ -61,7 +61,7 @@ export function runInit(argv: readonly string[], deps: InitDeps): number {
     throw new UsageError(messageOf(err));
   }
 
-  emit(`-- InsightKit provisioning for database "${config.database}", schema "${config.analyticsSchema}".`);
+  emit(`-- Insightics provisioning for database "${config.database}", schema "${config.analyticsSchema}".`);
   emit('--');
   emit('-- Run as a superuser, or as a role that may CREATE ROLE. Read section 2 first.');
   emit('--');
@@ -78,7 +78,7 @@ export function runInit(argv: readonly string[], deps: InitDeps): number {
   emit('-- later are invisible to the reader and nothing reports it. Set it with --owner.');
   emit('');
   emit(BAR);
-  emit("-- 1. SCOPED. Touches only InsightKit's own roles and schemas.");
+  emit("-- 1. SCOPED. Touches only Insightics' own roles and schemas.");
   emit(BAR);
   emit('');
   for (const statement of script.scoped) emit(`${statement};`);

@@ -1,9 +1,31 @@
 {
-  "name": "@insightkit/react",
-  "version": "0.0.0",
+  "name": "insightics-react",
+  "version": "1.0.1",
   "description": "The component a developer drops into an admin panel. Browser only: it talks to the server over HTTP and must never reach core.",
+  "keywords": [
+    "insightics",
+    "analytics",
+    "text-to-sql",
+    "postgres",
+    "llm",
+    "react",
+    "charts",
+    "dashboard"
+  ],
+  "homepage": "https://github.com/Abhxhek/insightkit-sdk/tree/main/packages/react#readme",
+  "bugs": {
+    "url": "https://github.com/Abhxhek/insightkit-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abhxhek/insightkit-sdk.git",
+    "directory": "packages/react"
+  },
   "license": "Apache-2.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.11.0"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -19,7 +41,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@insightkit/protocol": "workspace:*"
+    "insightics-protocol": "workspace:*"
   },
   "peerDependencies": {
     "react": ">=18"

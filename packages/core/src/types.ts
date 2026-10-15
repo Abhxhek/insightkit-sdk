@@ -1,4 +1,4 @@
-import type { DenyCode, TableRef } from '@insightkit/sql-guard';
+import type { DenyCode, TableRef } from 'insightics-sql-guard';
 
 export interface ResultSet {
   readonly columns: readonly string[];
@@ -27,9 +27,9 @@ declare const READER: unique symbol;
 declare const ADMIN: unique symbol;
 declare const GUARDED: unique symbol;
 
-export const READER_BRAND = Symbol.for('insightkit.source.reader');
-export const ADMIN_BRAND = Symbol.for('insightkit.source.admin');
-export const GUARDED_BRAND = Symbol.for('insightkit.query.guarded');
+export const READER_BRAND = Symbol.for('insightics.source.reader');
+export const ADMIN_BRAND = Symbol.for('insightics.source.admin');
+export const GUARDED_BRAND = Symbol.for('insightics.query.guarded');
 
 export interface ReaderSource extends ConnectionSource {
   readonly [READER]: true;

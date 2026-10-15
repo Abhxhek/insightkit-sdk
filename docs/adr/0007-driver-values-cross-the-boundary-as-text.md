@@ -35,7 +35,7 @@ The test for inclusion is *does the value survive `JSON.stringify` and mean the 
 
 **The registry is per-query, never global.** node-postgres reads `config.types` per query and falls back to the process-wide registry otherwise (`pg/lib/result.js`). Calling `pg.types.setTypeParser` would have been shorter and would have silently changed the behaviour of every other query in the host application. A library does not get to do that.
 
-**`pg` is an optional peer dependency behind a subpath.** The adapter lives at `@insightkit/core/pg`; the main entry does not reference `pg`, so a consumer on another driver installs nothing extra and `core` stays testable without a database. The client shape in `core/src/types.ts` is still structural — this adapter is an implementation of it, not a replacement for it.
+**`pg` is an optional peer dependency behind a subpath.** The adapter lives at `insightics-core/pg`; the main entry does not reference `pg`, so a consumer on another driver installs nothing extra and `core` stays testable without a database. The client shape in `core/src/types.ts` is still structural — this adapter is an implementation of it, not a replacement for it.
 
 **A pool with no `connectionTimeoutMillis` is rejected.** With it unset, an exhausted pool waits forever, so one slow query turns every later request into a hang rather than an error. Analytics endpoints are reachable by whoever can ask a question, which makes an unbounded wait an availability problem and not merely an ergonomic one. Failing closed here matches how the rest of the reader path already behaves.
 

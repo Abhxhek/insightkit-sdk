@@ -39,7 +39,7 @@ Three of these carry real weight.
 
 ### `react` must never import `core`
 
-`core` holds the database pool. In a Next.js app, one `import { Engine } from '@insightkit/core'` inside a component that turns out to be a client component means the bundler follows that import into the browser bundle — and the connection string goes with it.
+`core` holds the database pool. In a Next.js app, one `import { Engine } from 'insightics-core'` inside a component that turns out to be a client component means the bundler follows that import into the browser bundle — and the connection string goes with it.
 
 The developer who does this will not be us. It will be someone six months from now who wanted a type and grabbed the wrong import. It will look fine in dev. It will ship.
 

@@ -1,12 +1,12 @@
 /**
  * Turns the reader path's claims into observations. Needs a real Postgres:
  *
- *   DATABASE_URL=postgres://user:pass@localhost:5432/db pnpm --filter @insightkit/core smoke
+ *   DATABASE_URL=postgres://user:pass@localhost:5432/db pnpm --filter insightics-core smoke
  *
  * Read-only. It writes nothing and creates nothing; the one write it attempts is
  * expected to be refused, which is the point.
  */
-import { createGuard } from '@insightkit/sql-guard';
+import { createGuard } from 'insightics-sql-guard';
 import pg from 'pg';
 import { approve, asReaderSource, introspectSchema, runGuardedRead } from '../dist/index.js';
 import { fromPgPool } from '../dist/pg.js';
@@ -57,7 +57,7 @@ try {
     await client.query('BEGIN READ ONLY');
     let code = null;
     try {
-      await client.query('CREATE TEMP TABLE insightkit_smoke_should_not_exist (i int)');
+      await client.query('CREATE TEMP TABLE insightics_smoke_should_not_exist (i int)');
     } catch (err) {
       code = err.code;
     }
@@ -90,7 +90,7 @@ try {
   }
 
   // Parsing proved these are valid Postgres. Only a server proves they run.
-  const schema = await introspectSchema(source, { excludeSchemas: ['insightkit'] });
+  const schema = await introspectSchema(source, { excludeSchemas: ['insightics'] });
   record(
     'the catalog queries execute',
     true,

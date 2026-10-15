@@ -46,7 +46,7 @@ WHERE con.contype = 'f'
   AND <far side visible>
 ```
 
-**Our own tables are in the same database.** The `insightkit` metadata schema holds sessions and cached results. The model has no business knowing it exists, which is why `excludeSchemas` takes it — the same schema `doctor`'s A4 check separately proves the reader cannot reach.
+**Our own tables are in the same database.** The `insightics` metadata schema holds sessions and cached results. The model has no business knowing it exists, which is why `excludeSchemas` takes it — the same schema `doctor`'s A4 check separately proves the reader cannot reach.
 
 ## Two things Postgres makes easy to get wrong
 

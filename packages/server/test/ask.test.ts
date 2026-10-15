@@ -1,7 +1,7 @@
-import { defineGlossary } from '@insightkit/core';
-import { PROTOCOL_VERSION, parseAskResponse } from '@insightkit/protocol';
+import { defineGlossary } from 'insightics-core';
+import { PROTOCOL_VERSION, parseAskResponse } from 'insightics-protocol';
 import { describe, expect, it } from 'vitest';
-import { createInsightKit } from '../src/insightkit.js';
+import { createInsightics } from '../src/insightics.js';
 import type { ServerError, ServerSecurityEvent } from '../src/types.js';
 import { askRequest, draft, fakeDatabase, fakeProvider, singleTenantConfig } from './fake.js';
 
@@ -10,7 +10,7 @@ const body = async (response: Response): Promise<Record<string, unknown>> =>
 
 describe('asking a question', () => {
   it('returns a response the protocol accepts', async () => {
-    const ik = createInsightKit(singleTenantConfig());
+    const ik = createInsightics(singleTenantConfig());
     const response = await ik.ask(askRequest('how many users by signup method'));
 
     expect(response.status).toBe(200);
@@ -35,7 +35,7 @@ describe('asking a question', () => {
   });
 
   it('returns the approved sql only when the host opted in', async () => {
-    const ik = createInsightKit(singleTenantConfig({ exposeSql: true }));
+    const ik = createInsightics(singleTenantConfig({ exposeSql: true }));
     const answer = await body(await ik.ask(askRequest('how many users')));
     expect(answer.sql).toBe(
       'SELECT signup_method AS method, count(*) AS signups FROM users GROUP BY signup_method LIMIT 1000',
@@ -44,7 +44,7 @@ describe('asking a question', () => {
 
   it('refuses a question that is not a question before the model is reached', async () => {
     const model = fakeProvider([]);
-    const ik = createInsightKit(singleTenantConfig({}, { provider: model }));
+    const ik = createInsightics(singleTenantConfig({}, { provider: model }));
 
     const empty = await ik.ask(askRequest(''));
     const oversized = await ik.ask(askRequest('x'.repeat(2001)));
@@ -62,7 +62,7 @@ describe('asking a question', () => {
 
   it('refuses a body that is not json, and one that is too large', async () => {
     const model = fakeProvider([]);
-    const ik = createInsightKit(singleTenantConfig({ limits: { maxBodyBytes: 64 } }, { provider: model }));
+    const ik = createInsightics(singleTenantConfig({ limits: { maxBodyBytes: 64 } }, { provider: model }));
 
     const wrongType = await ik.ask(
       new Request('http://host.test/ask', { method: 'POST', body: 'question=hi' }),
@@ -75,14 +75,14 @@ describe('asking a question', () => {
   });
 
   it('refuses anything but POST', async () => {
-    const ik = createInsightKit(singleTenantConfig());
+    const ik = createInsightics(singleTenantConfig());
     const response = await ik.ask(new Request('http://host.test/ask', { method: 'GET' }));
     expect(response.status).toBe(405);
     expect(response.headers.get('allow')).toBe('POST');
   });
 
   it('carries the model reason on an unanswerable plan', async () => {
-    const ik = createInsightKit(
+    const ik = createInsightics(
       singleTenantConfig(
         {},
         { script: [draft({ answerable: false, sql: null, reason: 'no weather table exists' })] },
@@ -94,7 +94,7 @@ describe('asking a question', () => {
   });
 
   it('answers 200 for a refusal, so the status code is not an oracle', async () => {
-    const ik = createInsightKit(singleTenantConfig({}, { script: [draft({ sql: 'DELETE FROM users' })] }));
+    const ik = createInsightics(singleTenantConfig({}, { script: [draft({ sql: 'DELETE FROM users' })] }));
     const response = await ik.ask(askRequest('drop everything'));
     expect(response.status).toBe(200);
     expect((await body(response)).status).toBe('refused');
@@ -102,7 +102,7 @@ describe('asking a question', () => {
 
   it('turns a read failure into a generic error and tells the host', async () => {
     const errors: ServerError[] = [];
-    const ik = createInsightKit(
+    const ik = createInsightics(
       singleTenantConfig(
         { onError: (error) => errors.push(error) },
         { database: fakeDatabase({ failReads: true }) },
@@ -118,9 +118,9 @@ describe('asking a question', () => {
   });
 
   it('routes on the last path segment', async () => {
-    const ik = createInsightKit(singleTenantConfig());
+    const ik = createInsightics(singleTenantConfig());
     const ok = await ik.handler(askRequest('how many users'));
-    const missing = await ik.handler(new Request('http://host.test/api/insightkit/nope', { method: 'POST' }));
+    const missing = await ik.handler(new Request('http://host.test/api/insightics/nope', { method: 'POST' }));
     expect(ok.status).toBe(200);
     expect(missing.status).toBe(404);
   });
@@ -131,7 +131,7 @@ describe('security events', () => {
 
   it('reaches the host callback with the identity attached', async () => {
     const events: ServerSecurityEvent[] = [];
-    const ik = createInsightKit(
+    const ik = createInsightics(
       singleTenantConfig({ onSecurityEvent: (event) => events.push(event) }, { script: attack }),
     );
 
@@ -144,7 +144,7 @@ describe('security events', () => {
   });
 
   it('does not fail the request when the host callback throws', async () => {
-    const ik = createInsightKit(
+    const ik = createInsightics(
       singleTenantConfig(
         {
           onSecurityEvent: () => {
@@ -162,7 +162,7 @@ describe('security events', () => {
 
   it('throttles an identity that keeps probing', async () => {
     const events: ServerSecurityEvent[] = [];
-    const ik = createInsightKit(
+    const ik = createInsightics(
       singleTenantConfig(
         {
           onSecurityEvent: (event) => events.push(event),
@@ -186,7 +186,7 @@ describe('security events', () => {
 
 describe('load controls', () => {
   it('rejects a burst from one identity with 429', async () => {
-    const ik = createInsightKit(
+    const ik = createInsightics(
       singleTenantConfig({ limits: { burst: 1, questionsPerMinute: 1 } }, { script: [draft(), draft()] }),
     );
 
@@ -203,7 +203,7 @@ describe('load controls', () => {
 describe('the glossary', () => {
   it('reaches the prompt when every entry resolves', async () => {
     const model = fakeProvider([draft()]);
-    const ik = createInsightKit(
+    const ik = createInsightics(
       singleTenantConfig(
         {
           glossary: defineGlossary([
@@ -226,7 +226,7 @@ describe('the glossary', () => {
   it('drops an entry naming a column that is not there, and tells the host', async () => {
     const errors: ServerError[] = [];
     const model = fakeProvider([draft()]);
-    const ik = createInsightKit(
+    const ik = createInsightics(
       singleTenantConfig(
         {
           onError: (error) => errors.push(error),

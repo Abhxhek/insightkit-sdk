@@ -1,9 +1,30 @@
 {
-  "name": "@insightkit/llm",
-  "version": "0.0.0",
+  "name": "insightics-llm",
+  "version": "1.0.1",
   "description": "Model provider adapters. Sends messages, gets a structured object back. Knows nothing about SQL, schemas or databases, and cannot reach the guard or a connection.",
+  "keywords": [
+    "insightics",
+    "analytics",
+    "text-to-sql",
+    "postgres",
+    "llm",
+    "anthropic",
+    "openai"
+  ],
+  "homepage": "https://github.com/Abhxhek/insightkit-sdk/tree/main/packages/llm#readme",
+  "bugs": {
+    "url": "https://github.com/Abhxhek/insightkit-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abhxhek/insightkit-sdk.git",
+    "directory": "packages/llm"
+  },
   "license": "Apache-2.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.11.0"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

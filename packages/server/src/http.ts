@@ -1,5 +1,5 @@
-import type { AskResponse, StreamEvent } from '@insightkit/protocol';
-import { PROTOCOL_VERSION, parseAskResponse, parseStreamEvent } from '@insightkit/protocol';
+import type { AskResponse, StreamEvent } from 'insightics-protocol';
+import { PROTOCOL_VERSION, parseAskResponse, parseStreamEvent } from 'insightics-protocol';
 import { ERROR_MESSAGE, errorResponse } from './narrow.js';
 
 export const JSON_HEADERS: Readonly<Record<string, string>> = {

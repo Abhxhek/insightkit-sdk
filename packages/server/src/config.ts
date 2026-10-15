@@ -8,9 +8,9 @@ import type {
   RetrieveOptions,
   ScopeResolver,
   ScopeResolverConfig,
-} from '@insightkit/core';
-import { createScopeResolver, defineGlossary, validateGlossary } from '@insightkit/core';
-import { MAX_STREAM_INTERVAL_MS, MIN_STREAM_INTERVAL_MS } from '@insightkit/protocol';
+} from 'insightics-core';
+import { createScopeResolver, defineGlossary, validateGlossary } from 'insightics-core';
+import { MAX_STREAM_INTERVAL_MS, MIN_STREAM_INTERVAL_MS } from 'insightics-protocol';
 import { bearerToken } from './http.js';
 import type { Limiter, LimitsRuntime } from './limits.js';
 import { createLimiter, limitsRuntime } from './limits.js';
@@ -18,7 +18,7 @@ import { assertTenancy } from './scope.js';
 import { createMemoryStreamStore } from './store.js';
 import type {
   Guard,
-  InsightKitConfig,
+  InsighticsConfig,
   LiveConfig,
   MultiTenant,
   PlanTuning,
@@ -96,7 +96,7 @@ const count = (value: number | undefined, fallback: number, what: string): numbe
   return value;
 };
 
-function schemaLoader(config: InsightKitConfig): () => Promise<DatabaseSchema> {
+function schemaLoader(config: InsighticsConfig): () => Promise<DatabaseSchema> {
   const source = config.schema;
   if (source === undefined) throw new TypeError('schema is required: pass a DatabaseSchema or a loader');
   if (typeof source !== 'function') return async () => source;
@@ -194,8 +194,8 @@ const route = (name: string | undefined, fallback: string): string => {
   return value;
 };
 
-export function createRuntime(config: InsightKitConfig): Runtime {
-  if (config === undefined || config === null) throw new TypeError('createInsightKit needs a configuration');
+export function createRuntime(config: InsighticsConfig): Runtime {
+  if (config === undefined || config === null) throw new TypeError('createInsightics needs a configuration');
   const tenancy = assertTenancy(config.tenancy);
   if (typeof config.guard !== 'function') throw new TypeError('guard is required');
   if (config.source === undefined) throw new TypeError('source is required');

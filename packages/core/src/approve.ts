@@ -1,4 +1,4 @@
-import type { Guard, Policy } from '@insightkit/sql-guard';
+import type { Guard, Policy } from 'insightics-sql-guard';
 import type { Approval, GuardedQuery } from './types.js';
 import { GUARDED_BRAND } from './types.js';
 

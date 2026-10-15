@@ -61,7 +61,7 @@ describe('the catalog queries are valid Postgres', () => {
   it('still parses with every option engaged', () => {
     const sql = ALL({
       schemas: ['public', 'reporting'],
-      excludeSchemas: ['insightkit'],
+      excludeSchemas: ['insightics'],
       asRole: 'ik_reader',
       maxTables: 10,
       maxColumns: 20,
@@ -109,8 +109,8 @@ describe('what the queries are allowed to see', () => {
   });
 
   it('excludes the schemas it is told to, such as our own metadata', () => {
-    expect(introspectionQueries({ excludeSchemas: ['insightkit'] }).tables).toContain(
-      "n.nspname <> 'insightkit'",
+    expect(introspectionQueries({ excludeSchemas: ['insightics'] }).tables).toContain(
+      "n.nspname <> 'insightics'",
     );
   });
 

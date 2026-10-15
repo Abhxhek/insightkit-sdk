@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
-import type { ChartKind, ChartSpec, ResultSet } from '@insightkit/protocol';
+
 import { cleanup, render, screen, within } from '@testing-library/react';
+import type { ChartKind, ChartSpec, ResultSet } from 'insightics-protocol';
 import { afterEach, describe, expect, it } from 'vitest';
 import { Chart } from '../src/chart.js';
 

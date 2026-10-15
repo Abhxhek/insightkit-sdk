@@ -1,4 +1,4 @@
-# @insightkit/core
+# insightics-core
 
 The engine. Core is where "user SQL can only read" stops being a claim about a string and becomes a claim about a database: role split, sealed read-only transaction, isolation proofs, schema introspection, the planner, tenant scoping, and the approved-query store.
 
@@ -8,30 +8,30 @@ Core is the only package allowed to reach a database driver — `core-is-the-onl
 
 It is also fenced in from both sides:
 
-- **`core-never-reaches-the-browser`** — core may not import `@insightkit/react` or `@insightkit/llm`. It holds connection material, and it declares the model provider *structurally* (`ModelProvider` in [`src/plan/provider.ts`](./src/plan/provider.ts)), exactly as it declares `SqlClient` rather than importing `pg`. Reaching a model therefore costs no dependency, and any client satisfying the shape works.
-- **`browser-never-imports-engine`** — nothing in `@insightkit/react` may import core. One such import in a Next.js client component ships the connection string into the browser bundle.
-- **`identity-is-not-the-guard`** — `src/identity/` may not import `src/plan/` or `@insightkit/sql-guard`. Deciding *who is asking* must not also be able to decide what SQL is safe.
+- **`core-never-reaches-the-browser`** — core may not import `insightics-react` or `insightics-llm`. It holds connection material, and it declares the model provider *structurally* (`ModelProvider` in [`src/plan/provider.ts`](./src/plan/provider.ts)), exactly as it declares `SqlClient` rather than importing `pg`. Reaching a model therefore costs no dependency, and any client satisfying the shape works.
+- **`browser-never-imports-engine`** — nothing in `insightics-react` may import core. One such import in a Next.js client component ships the connection string into the browser bundle.
+- **`identity-is-not-the-guard`** — `src/identity/` may not import `src/plan/` or `insightics-sql-guard`. Deciding *who is asking* must not also be able to decide what SQL is safe.
 
-`pnpm --filter @insightkit/core list --prod --depth Infinity` reports **9 packages**: `@insightkit/sql-guard` with its parser tree, plus `jose` for JWT verification.
+`pnpm --filter insightics-core list --prod --depth Infinity` reports **9 packages**: `insightics-sql-guard` with its parser tree, plus `jose` for JWT verification.
 
 ## Install
 
 ```bash
-pnpm add @insightkit/core
+pnpm add insightics-core
 
 # only if you want the node-postgres adapter
 pnpm add pg
 ```
 
-`pg` is an **optional** peer dependency (`^8.11.0`) and lives behind the `@insightkit/core/pg` subpath, so the main entry point never references a driver and core stays testable without one.
+`pg` is an **optional** peer dependency (`^8.11.0`) and lives behind the `insightics-core/pg` subpath, so the main entry point never references a driver and core stays testable without one.
 
 ## Usage
 
 ```ts
 import { Pool } from 'pg';
-import { createGuard } from '@insightkit/sql-guard';
-import { approve, asReaderSource, runGuardedRead } from '@insightkit/core';
-import { fromPgPool } from '@insightkit/core/pg';
+import { createGuard } from 'insightics-sql-guard';
+import { approve, asReaderSource, runGuardedRead } from 'insightics-core';
+import { fromPgPool } from 'insightics-core/pg';
 
 // connectionTimeoutMillis is required — fromPgPool refuses a pool without one
 const pool = new Pool({ connectionString: process.env.IK_READER_URL, connectionTimeoutMillis: 5_000 });
@@ -75,7 +75,7 @@ That `SELECT` is the guard's re-emitted SQL — reformatted, `LIMIT 1000` clampe
 | Area | Files | What it owns |
 |---|---|---|
 | Reader path | `source.ts`, `approve.ts`, `execute.ts`, `session.ts` | capability-typed sources, the guarded-query brand, the sealed transaction |
-| Driver adapter | `pg.ts` (`@insightkit/core/pg`) | `fromPgPool`, `FIDELITY_TYPES`, array row mode |
+| Driver adapter | `pg.ts` (`insightics-core/pg`) | `fromPgPool`, `FIDELITY_TYPES`, array row mode |
 | Provisioning | `provision.ts` | 27 scoped + 5 cluster-wide DDL statements for the reader/login/metadata roles |
 | Doctor | `doctor/` | 12 isolation checks: A0–A4 on reader privilege (blocking), T1–T4 on row security, B1–B3 on escalation surfaces |
 | Introspection | `introspect/` | privilege-filtered catalog queries, capped at 200 tables / 5000 columns |
@@ -104,9 +104,9 @@ That `SELECT` is the guard's re-emitted SQL — reformatted, `LIMIT 1000` clampe
 
 ## What it does not do
 
-- **It has never run against a real Postgres.** Its tests (`npx vitest run packages/core` from the repo root) exercise pure functions and a recording fake client, and the `pg` adapter is driven through node-postgres' own type parsers. That proves what we send, what we refuse and how the driver converts — not how a server responds. [`scripts/smoke-pg.mjs`](./scripts/smoke-pg.mjs) turns the outstanding claims into observations: `DATABASE_URL=… pnpm --filter @insightkit/core smoke`.
+- **It has never run against a real Postgres.** Its tests (`npx vitest run packages/core` from the repo root) exercise pure functions and a recording fake client, and the `pg` adapter is driven through node-postgres' own type parsers. That proves what we send, what we refuse and how the driver converts — not how a server responds. [`scripts/smoke-pg.mjs`](./scripts/smoke-pg.mjs) turns the outstanding claims into observations: `DATABASE_URL=… pnpm --filter insightics-core smoke`.
 - **The planner has never run against a real model.** Accuracy is unmeasured. `planQuery` takes a `ModelProvider` you supply.
-- **`runGuardedRead` does not require a scope.** It accepts one through `options.scope`, but a host calling core directly can omit it and read unscoped. `@insightkit/server` closes that for its own callers; see [ADR 0015](../../docs/adr/0015-an-unscoped-read-must-be-impossible-by-accident.md) for what "impossible by accident" actually took.
-- **It does not define the wire format.** Core has no dependency on `@insightkit/protocol` and declares its own `ChartSpec` and `ResultSet`; narrowing them for a browser is `@insightkit/server`'s job, deliberately.
+- **`runGuardedRead` does not require a scope.** It accepts one through `options.scope`, but a host calling core directly can omit it and read unscoped. `insightics-server` closes that for its own callers; see [ADR 0015](../../docs/adr/0015-an-unscoped-read-must-be-impossible-by-accident.md) for what "impossible by accident" actually took.
+- **It does not define the wire format.** Core has no dependency on `insightics-protocol` and declares its own `ChartSpec` and `ResultSet`; narrowing them for a browser is `insightics-server`'s job, deliberately.
 - **It does not provision anything.** `provisioningScript()` returns strings for a human or the CLI to run. Core never executes DDL on your behalf, and migrations run only when invoked — creating a schema inside someone's production database at startup is a change their change log cannot explain.
 - **It is not an HTTP server, a connection pool or a scheduler.** You bring the pool; core only ever calls `connect()` on it.

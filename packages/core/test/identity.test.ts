@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
-import type { Guard } from '@insightkit/sql-guard';
-import { createGuard } from '@insightkit/sql-guard';
+import type { Guard } from 'insightics-sql-guard';
+import { createGuard } from 'insightics-sql-guard';
 import { exportSPKI, generateKeyPair, SignJWT } from 'jose';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { approve } from '../src/approve.js';
@@ -98,9 +98,9 @@ describe('token verification', () => {
   });
 
   it('enforces issuer and audience when they are configured', async () => {
-    const verify = await createTokenVerifier({ ...HS, issuer: 'https://id.test', audience: 'insightkit' });
-    const good = await sign({ tid: 'acme', iss: 'https://id.test', aud: 'insightkit' });
-    const badIssuer = await sign({ tid: 'acme', iss: 'https://evil.test', aud: 'insightkit' });
+    const verify = await createTokenVerifier({ ...HS, issuer: 'https://id.test', audience: 'insightics' });
+    const good = await sign({ tid: 'acme', iss: 'https://id.test', aud: 'insightics' });
+    const badIssuer = await sign({ tid: 'acme', iss: 'https://evil.test', aud: 'insightics' });
     const badAudience = await sign({ tid: 'acme', iss: 'https://id.test', aud: 'other' });
     await expect(verify(good)).resolves.toBeDefined();
     expect(await failure(() => verify(badIssuer))).toEqual(['E_TOKEN_CLAIM', 'authentication']);

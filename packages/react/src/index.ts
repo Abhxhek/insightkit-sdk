@@ -32,7 +32,7 @@ export {
   plotValues,
   segmentsOf,
 } from './series.js';
-export { ChartStyles, INSIGHTKIT_CSS } from './styles.js';
+export { ChartStyles, INSIGHTICS_CSS } from './styles.js';
 export type { AskFailureCause, AskState, FetchLike, UseAskOptions, UseAskResult } from './use-ask.js';
 export { useAsk } from './use-ask.js';
 export type {

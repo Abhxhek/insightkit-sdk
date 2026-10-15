@@ -1,13 +1,13 @@
 const lines = (text: string): readonly string[] => text.replace(/^\n/, '').trimEnd().split('\n');
 
 export const CLI_HELP = lines(`
-ik - InsightKit's command line
+ik - Insightics' command line
 
 Usage
   ik <command> [options]
 
 Commands
-  init         print the SQL a DBA runs to create InsightKit's roles and grants
+  init         print the SQL a DBA runs to create Insightics' roles and grants
   doctor       prove against the live catalog that the reader cannot write
   introspect   print the schema the reader can see, as DDL
 
@@ -28,7 +28,7 @@ read-only, and neither prints a URL, a user or a password.
 `);
 
 export const INIT_HELP = lines(`
-ik init - print the provisioning SQL for InsightKit's roles
+ik init - print the provisioning SQL for Insightics' roles
 
 Usage
   ik init [options] > provision.sql
@@ -43,14 +43,14 @@ Options
   --owner <role>              role that owns those tables          [postgres]
   --reader <role>             group role that holds SELECT         [ik_reader]
   --login <role>              login role the SDK connects as       [ik_sdk]
-  --meta-role <role>          login role for InsightKit's metadata [ik_meta]
-  --meta-schema <name>        schema holding that metadata         [insightkit]
+  --meta-role <role>          login role for Insightics' metadata [ik_meta]
+  --meta-schema <name>        schema holding that metadata         [insightics]
   --connection-limit <n>      per-role connection cap              [5]
   --valid-until <YYYY-MM-DD>  expiry on the login role             [one year out]
   --scoped-only               omit the cluster-wide section
   -h, --help
 
-The output is split into a scoped section, which touches only InsightKit's own
+The output is split into a scoped section, which touches only Insightics' own
 roles and schemas, and a cluster-wide section, which changes privileges held by
 PUBLIC and therefore by every other role in the cluster.
 `);
@@ -70,7 +70,7 @@ Options
   --url-env <NAME>      environment variable holding the URL  [DATABASE_URL]
   --reader <role>       group role that holds SELECT          [ik_reader]
   --login <role>        login role the SDK connects as        [ik_sdk]
-  --meta-schema <name>  schema holding InsightKit's metadata  [insightkit]
+  --meta-schema <name>  schema holding Insightics' metadata  [insightics]
   --timeout <ms>        connection timeout                    [10000]
   --strict              fail on review findings as well as blocking ones
   -h, --help
@@ -93,7 +93,7 @@ Options
   --url-env <NAME>          environment variable holding the URL  [DATABASE_URL]
   --schema <name>           restrict to this schema, repeatable
   --exclude-schema <name>   skip this schema, repeatable
-  --meta-schema <name>      always excluded                       [insightkit]
+  --meta-schema <name>      always excluded                       [insightics]
   --max-tables <n>          cap; truncation is reported, not hidden  [200]
   --max-columns <n>         cap; truncation is reported, not hidden  [5000]
   --statement-timeout <ms>  per catalog query                     [15000]

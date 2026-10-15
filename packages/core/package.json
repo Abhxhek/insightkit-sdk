@@ -1,9 +1,31 @@
 {
-  "name": "@insightkit/core",
-  "version": "0.0.0",
-  "description": "The InsightKit engine. Owns the two-role connection split, the sealed read-only transaction, and the isolation proofs. The only package that talks to a database.",
+  "name": "insightics-core",
+  "version": "1.0.1",
+  "description": "The Insightics engine. Owns the two-role connection split, the sealed read-only transaction, and the isolation proofs. The only package that talks to a database.",
+  "keywords": [
+    "insightics",
+    "analytics",
+    "text-to-sql",
+    "postgres",
+    "llm",
+    "sql",
+    "read-only",
+    "row-level-security"
+  ],
+  "homepage": "https://github.com/Abhxhek/insightkit-sdk/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/Abhxhek/insightkit-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abhxhek/insightkit-sdk.git",
+    "directory": "packages/core"
+  },
   "license": "Apache-2.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.11.0"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -24,7 +46,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@insightkit/sql-guard": "workspace:*",
+    "insightics-sql-guard": "workspace:*",
     "jose": "^6.1.0"
   },
   "peerDependencies": {
@@ -36,8 +58,8 @@
     }
   },
   "devDependencies": {
-    "@insightkit/llm": "workspace:*",
     "@types/pg": "^8.11.10",
+    "insightics-llm": "workspace:*",
     "pg": "^8.23.0",
     "pgsql-parser": "^18.2.6"
   }
