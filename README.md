@@ -52,7 +52,7 @@ A second guarantee runs beside the first: Insightics' own metadata writes use a 
 npm install insightics pg @anthropic-ai/sdk
 ```
 
-`insightics` is one install with an import path per part — `insightics/server`, `insightics/react`, `insightics/core` and so on — and deliberately no root import, so browser code cannot pull in server code by accident. Each part is also published on its own as `insightics-<part>`.
+`insightics` is one install with an import path per part — `insightics/server`, `insightics/react`, `insightics/core` and so on — and deliberately no root import, so browser code cannot pull in server code by accident. Inside the repository the parts stay separate packages, which is where their boundaries are enforced; the build packs them into this one.
 
 Server — one handler, mounted wherever you like:
 
@@ -98,7 +98,7 @@ import { Insight } from 'insightics/react';
 The component that decides whether SQL is safe is a package that **cannot execute SQL, cannot open a socket, and cannot read the filesystem**. It takes a string and returns a verdict. Something else runs the query.
 
 ```ts
-import { createGuard } from 'insightics-sql-guard';
+import { createGuard } from 'insightics/sql-guard';
 
 const guard = await createGuard({ allowedSchemas: ['public'] });
 
@@ -137,7 +137,7 @@ packages/
   server/       HTTP + SSE handlers (next / node / fastify / hono)
   react/        components and hooks - browser only
   cli/          ik init | doctor | introspect
-  insightics/   the umbrella - one install, a subpath per package, no root import
+  insightics/   the one published package - the parts packed together, a subpath each, no root import
   eval/         release gate - corpus + scorer, never published
 ```
 

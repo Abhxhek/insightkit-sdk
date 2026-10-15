@@ -13,10 +13,10 @@
 ## Install
 
 ```sh
-pnpm add -D insightics-cli pg
+npm install insightics pg
 ```
 
-`pg ^8.11.0` is an **optional** peer dependency. `ik init` connects to nothing and needs no driver at all; `ik doctor` and `ik introspect` exit 3 with `this command needs node-postgres, which is an optional peer dependency` when `pg` is absent.
+Not published on its own: `insightics` installs the `ik` command, so `npx ik doctor` works in any project that depends on it. `pg ^8.11.0` is an **optional** peer dependency. `ik init` connects to nothing and needs no driver at all; `ik doctor` and `ik introspect` exit 3 with `this command needs node-postgres, which is an optional peer dependency` when `pg` is absent.
 
 ## Usage
 

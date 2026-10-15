@@ -88,19 +88,9 @@ module.exports = {
       name: 'nothing-imports-the-cli',
       severity: 'error',
       comment:
-        'The CLI is a leaf. It is a front end over core for a human at a terminal, never a library another package builds on. The umbrella package re-exposes its binary and is the one exception.',
-      from: { path: '^packages/(?!cli/|insightics/)' },
+        'The CLI is a leaf. It is a front end over core for a human at a terminal, never a library another package builds on.',
+      from: { path: '^packages/(?!cli/)' },
       to: { path: '^packages/cli/' },
-    },
-    {
-      name: 'umbrella-browser-entry-stays-in-the-browser',
-      severity: 'error',
-      comment:
-        'insightics/react is what a client component imports. It may reach the react package and nothing that holds connection material or a model key.',
-      from: { path: '^packages/insightics/src/react' },
-      to: {
-        path: '^packages/(core|server|cli|llm|sql-guard)/|^(node:)?(fs|net|http|https|child_process|tls|dns)(/|$)|^pg(-|$)',
-      },
     },
     {
       name: 'cli-never-reaches-the-browser',

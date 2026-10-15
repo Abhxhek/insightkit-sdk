@@ -17,28 +17,28 @@ How that is enforced, precisely:
 ## Install
 
 ```sh
-pnpm add insightics-server
+npm install insightics
 ```
 
-`insightics-server` declares no peer dependencies of its own; it pulls in `insightics-core` and `insightics-protocol`. You supply three things it does not ship:
+Not published on its own: it ships inside `insightics` and is imported from `insightics/server`. It declares no peer dependencies of its own. You supply three things it does not create for you:
 
-- a guard — `createGuard()` from `insightics-sql-guard`
-- a `ModelProvider` — core declares the shape structurally, so anything matching it works; `anthropicProvider` from `insightics-llm/anthropic` is one
-- a `ReaderSource` — `fromPgPool` from `insightics-core/pg`, which needs `pg` (an **optional** peer of `core`)
+- a guard — `createGuard()` from `insightics/sql-guard`
+- a `ModelProvider` — core declares the shape structurally, so anything matching it works; `anthropicProvider` from `insightics/llm/anthropic` is one
+- a `ReaderSource` — `fromPgPool` from `insightics/core/pg`, which needs `pg` (an **optional** peer)
 
 ## Usage
 
 ```ts
-import { asReaderSource, introspectSchema } from 'insightics-core';
-import { fromPgPool } from 'insightics-core/pg';
-import { anthropicProvider } from 'insightics-llm/anthropic';
+import { asReaderSource, introspectSchema } from 'insightics/core';
+import { fromPgPool } from 'insightics/core/pg';
+import { anthropicProvider } from 'insightics/llm/anthropic';
 import {
   createInsightics,
   SINGLE_TENANT_ACKNOWLEDGEMENT,
   singleTenant,
   toNextRoute,
-} from 'insightics-server';
-import { createGuard } from 'insightics-sql-guard';
+} from 'insightics/server';
+import { createGuard } from 'insightics/sql-guard';
 import { Pool } from 'pg';
 
 const source = asReaderSource(

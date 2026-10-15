@@ -1,6 +1,7 @@
 {
   "name": "insightics-core",
   "version": "1.0.1",
+  "private": true,
   "description": "The Insightics engine. Owns the two-role connection split, the sealed read-only transaction, and the isolation proofs. The only package that talks to a database.",
   "keywords": [
     "insightics",
