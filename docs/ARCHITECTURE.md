@@ -32,6 +32,7 @@ packages/
   server/       HTTP + SSE handlers (next / node / fastify / hono)
   react/        components and hooks — browser only
   cli/          ik init | doctor | introspect
+  insightics/   the umbrella — one install, a subpath per package, no root entry
   eval/         the release gate — corpus + harness, never published
 ```
 
@@ -47,6 +48,7 @@ packages/
 | `cli` | `core`, `node:*`; `pg` loaded at runtime and handed straight to `fromPgPool` | `react`, a static `pg` import; and nothing may import `cli` |
 | `server` | `core`, `protocol` | `react`, `sql-guard` (the guard's type is taken from `core`) |
 | `eval` | `sql-guard`, the public API of what it scores | `pg`, `node:*` in `src`; nothing may import `eval` |
+| `insightics` | the seven, one re-export per subpath; `cli` for its binary | a root entry; anything in an entry beyond its one re-export; server packages from `insightics/react` |
 
 A forbidden import of a sibling package fails `pnpm verify` by one of two routes. A package that does not declare the dependency cannot resolve it under pnpm's strict layout, so the typecheck fails — dependency-cruiser reports such an import as unresolvable and does not flag it. One that declares the dependency, or reaches the sibling by a relative path, is caught by the dependency-cruiser rule.
 
@@ -181,7 +183,7 @@ Four surfaces where information leaves our hands. Each is decided by what must *
 
 ## State
 
-All eight packages are built and green: `sql-guard` (security kernel), `eval` (release gate), `llm` (provider adapters), `protocol` (wire contract), `cli` (`ik init | doctor | introspect`), `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, retrieval, planner, tenant identity, semantic layer, approved-query store), `server` (HTTP and SSE handlers) and `react` (component, hooks, SVG charts). The seven public packages are on npm as `insightics-*@1.0.1`; `eval` stays private. 1.0.1 was published from a developer machine with a token, so it carries no provenance — moving releases to CI trusted publishing is outstanding.
+All eight packages are built and green: `sql-guard` (security kernel), `eval` (release gate), `llm` (provider adapters), `protocol` (wire contract), `cli` (`ik init | doctor | introspect`), `core` (reader path, isolation proofs, provisioning, node-postgres adapter, schema introspection, retrieval, planner, tenant identity, semantic layer, approved-query store), `server` (HTTP and SSE handlers) and `react` (component, hooks, SVG charts). The seven parts are on npm as `insightics-<part>@1.0.1`, with `insightics` as the umbrella most apps install; `eval` stays private. The umbrella exists because a developer wants one install, and it keeps the split by giving each part its own subpath and no root entry — `test/entries.test.ts` fails if a root entry appears or an entry does more than re-export its one package. 1.0.1 was published from a developer machine with a token, so it carries no provenance — moving releases to CI trusted publishing is outstanding.
 
 `server` wires the planner, the semantic layer, tenant scoping and the reader path together and closes the unscoped-read fail-open for its own callers; `runGuardedRead` accepts a scope but does not *require* one, so a host using `core` directly must re-invent that obligation. The planner has never run against a real model or database, so accuracy is unmeasured.
 

@@ -72,6 +72,42 @@ importers:
         specifier: 18.2.6
         version: 18.2.6
 
+  packages/insightics:
+    dependencies:
+      '@anthropic-ai/sdk':
+        specifier: '>=0.124.0'
+        version: 0.124.0(zod@4.6.5)
+      insightics-cli:
+        specifier: workspace:*
+        version: link:../cli
+      insightics-core:
+        specifier: workspace:*
+        version: link:../core
+      insightics-llm:
+        specifier: workspace:*
+        version: link:../llm
+      insightics-protocol:
+        specifier: workspace:*
+        version: link:../protocol
+      insightics-react:
+        specifier: workspace:*
+        version: link:../react
+      insightics-server:
+        specifier: workspace:*
+        version: link:../server
+      insightics-sql-guard:
+        specifier: workspace:*
+        version: link:../sql-guard
+      openai:
+        specifier: '>=7.0.0'
+        version: 7.13.0(ws@8.22.0)(zod@4.6.5)
+      pg:
+        specifier: ^8.11.0
+        version: 8.23.0
+      react:
+        specifier: '>=18'
+        version: 19.3.0
+
   packages/llm:
     devDependencies:
       '@anthropic-ai/sdk':
