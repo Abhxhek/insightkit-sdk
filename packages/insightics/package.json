@@ -27,44 +27,44 @@
     "node": ">=20.11.0"
   },
   "bin": {
-    "ik": "./dist/bin.js"
+    "ik": "./dist/cli/bin.js"
   },
   "exports": {
     "./server": {
-      "types": "./dist/server.d.ts",
-      "default": "./dist/server.js"
+      "types": "./dist/server/index.d.ts",
+      "default": "./dist/server/index.js"
     },
     "./react": {
-      "types": "./dist/react.d.ts",
-      "default": "./dist/react.js"
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
     },
     "./core": {
-      "types": "./dist/core.d.ts",
-      "default": "./dist/core.js"
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
     },
     "./core/pg": {
-      "types": "./dist/core-pg.d.ts",
-      "default": "./dist/core-pg.js"
+      "types": "./dist/core/pg.d.ts",
+      "default": "./dist/core/pg.js"
     },
     "./sql-guard": {
-      "types": "./dist/sql-guard.d.ts",
-      "default": "./dist/sql-guard.js"
+      "types": "./dist/sql-guard/index.d.ts",
+      "default": "./dist/sql-guard/index.js"
     },
     "./protocol": {
-      "types": "./dist/protocol.d.ts",
-      "default": "./dist/protocol.js"
+      "types": "./dist/protocol/index.d.ts",
+      "default": "./dist/protocol/index.js"
     },
     "./llm": {
-      "types": "./dist/llm.d.ts",
-      "default": "./dist/llm.js"
+      "types": "./dist/llm/index.d.ts",
+      "default": "./dist/llm/index.js"
     },
     "./llm/anthropic": {
-      "types": "./dist/llm-anthropic.d.ts",
-      "default": "./dist/llm-anthropic.js"
+      "types": "./dist/llm/anthropic.d.ts",
+      "default": "./dist/llm/anthropic.js"
     },
     "./llm/openai": {
-      "types": "./dist/llm-openai.d.ts",
-      "default": "./dist/llm-openai.js"
+      "types": "./dist/llm/openai.d.ts",
+      "default": "./dist/llm/openai.js"
     }
   },
   "files": [
@@ -72,17 +72,13 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "node scripts/bundle.mjs",
     "test": "vitest run"
   },
   "dependencies": {
-    "insightics-cli": "workspace:*",
-    "insightics-core": "workspace:*",
-    "insightics-llm": "workspace:*",
-    "insightics-protocol": "workspace:*",
-    "insightics-react": "workspace:*",
-    "insightics-server": "workspace:*",
-    "insightics-sql-guard": "workspace:*"
+    "jose": "^6.1.0",
+    "pgsql-parser": "18.2.6",
+    "zod": "^4.6.5"
   },
   "peerDependencies": {
     "@anthropic-ai/sdk": ">=0.124.0",
@@ -103,5 +99,14 @@
     "react": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "insightics-cli": "workspace:*",
+    "insightics-core": "workspace:*",
+    "insightics-llm": "workspace:*",
+    "insightics-protocol": "workspace:*",
+    "insightics-react": "workspace:*",
+    "insightics-server": "workspace:*",
+    "insightics-sql-guard": "workspace:*"
   }
 }

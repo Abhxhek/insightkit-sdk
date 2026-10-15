@@ -1,14 +1,29 @@
 import { readFileSync } from 'node:fs';
 
 const FALLBACK = '0.0.0';
+const NAMES: ReadonlySet<string> = new Set(['insightics-cli', 'insightics']);
 
-// '../package.json' resolves the same from src/ under vitest and from dist/ when installed.
-export function version(): string {
+// One level up from src/ and from this package's dist/; two levels up once the build has
+// packed this package into insightics as dist/cli/.
+const CANDIDATES = ['../package.json', '../../package.json'];
+
+const read = (candidate: string): { name?: unknown; version?: unknown } | null => {
   try {
-    const parsed: unknown = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
-    const declared = (parsed as { version?: unknown }).version;
-    return typeof declared === 'string' ? declared : FALLBACK;
+    return JSON.parse(readFileSync(new URL(candidate, import.meta.url), 'utf8')) as {
+      name?: unknown;
+      version?: unknown;
+    };
   } catch {
-    return FALLBACK;
+    return null;
   }
+};
+
+export function version(): string {
+  for (const candidate of CANDIDATES) {
+    const parsed = read(candidate);
+    if (typeof parsed?.name === 'string' && NAMES.has(parsed.name) && typeof parsed.version === 'string') {
+      return parsed.version;
+    }
+  }
+  return FALLBACK;
 }

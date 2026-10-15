@@ -13,15 +13,15 @@ The more important boundary is the one in the *shapes*. `protocol` is a narrowin
 ## Install
 
 ```bash
-pnpm add insightics-protocol
+npm install insightics
 ```
 
-No peer dependencies. Isomorphic — no Node builtins, no DOM.
+Not published on its own: it ships inside `insightics` and is imported from `insightics/protocol`. No peer dependencies. Isomorphic — no Node builtins, no DOM.
 
 ## Usage
 
 ```ts
-import { parseAskResponse, PROTOCOL_VERSION } from 'insightics-protocol';
+import { parseAskResponse, PROTOCOL_VERSION } from 'insightics/protocol';
 
 PROTOCOL_VERSION; // 1
 
