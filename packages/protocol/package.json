@@ -1,6 +1,7 @@
 {
   "name": "insightics-protocol",
   "version": "1.0.1",
+  "private": true,
   "description": "The wire contract between browser and server. Deliberately narrower than what the server knows: a deny code, a token count or a SQL string must not cross to a client unless the host opts in.",
   "keywords": [
     "insightics",

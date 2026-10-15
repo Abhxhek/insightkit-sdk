@@ -1,6 +1,7 @@
 {
   "name": "insightics-sql-guard",
   "version": "1.0.1",
+  "private": true,
   "description": "The Insightics security kernel: decides whether a SQL string is a safe read-only SELECT. Parses, validates against an allowlist, and re-emits the SQL from its own AST. Cannot connect to a database.",
   "keywords": [
     "insightics",

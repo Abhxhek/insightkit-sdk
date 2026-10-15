@@ -16,15 +16,15 @@ Changes here are gated by [`CODEOWNERS`](../../CODEOWNERS), as is [`test/corpus/
 ## Install
 
 ```bash
-pnpm add insightics-sql-guard
+npm install insightics
 ```
 
-No peer dependencies. ESM only; the repository's engine floor is Node >= 20.11.
+Not published on its own: it ships inside `insightics` and is imported from `insightics/sql-guard`. No peer dependencies. ESM only; the repository's engine floor is Node >= 20.11.
 
 ## Usage
 
 ```ts
-import { createGuard } from 'insightics-sql-guard';
+import { createGuard } from 'insightics/sql-guard';
 
 // async once: this loads libpg_query, Postgres 18's own parser compiled to WebAssembly
 const guard = await createGuard({ allowedSchemas: ['public'], maxRows: 1000 });

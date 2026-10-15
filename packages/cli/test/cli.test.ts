@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { runCli } from '../src/cli.js';
 import { openDatabase } from '../src/connect.js';
@@ -36,11 +37,14 @@ describe('dispatch', () => {
     expect(out.stderr.join('\n')).toContain('Usage');
   });
 
-  it('prints the package version', async () => {
+  it('prints the version declared in package.json, not the fallback', async () => {
+    const declared = (
+      JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }
+    ).version;
     const { out, code } = await run(['--version']);
     expect(code).toBe(EXIT_OK);
-    expect(out.stdout).toEqual([version()]);
-    expect(version()).toMatch(/^\d+\.\d+\.\d+/);
+    expect(out.stdout).toEqual([declared]);
+    expect(version()).toBe(declared);
   });
 
   it('rejects a command it does not have', async () => {

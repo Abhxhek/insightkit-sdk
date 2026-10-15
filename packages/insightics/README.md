@@ -28,7 +28,7 @@ Use `openai` instead of `@anthropic-ai/sdk` if that is your provider. `pg`, the 
 
 It also installs the `ik` command: `npx ik init`, `npx ik doctor`, `npx ik introspect`.
 
-**There is no `import … from 'insightics'`, on purpose.** A root import would mix browser and server code, and one wrong import in a client component would ship your database URL and model key into the browser bundle. Each path re-exports exactly one underlying package — `insightics-server`, `insightics-react` and so on — which can also be installed on their own.
+**There is no `import … from 'insightics'`, on purpose.** A root import would mix browser and server code, and one wrong import in a client component would ship your database URL and model key into the browser bundle. Inside the repository each path is a separate package with its own enforced boundaries; the build packs them into this one, and a test checks that the packed `insightics/react` reaches nothing on the server side.
 
 ## Quick start
 

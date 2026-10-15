@@ -1,6 +1,7 @@
 {
   "name": "insightics-react",
   "version": "1.0.1",
+  "private": true,
   "description": "The component a developer drops into an admin panel. Browser only: it talks to the server over HTTP and must never reach core.",
   "keywords": [
     "insightics",
