@@ -1,0 +1,107 @@
+{
+  "name": "insightics",
+  "version": "1.0.1",
+  "description": "Prompt-driven, real-time analytics for a Node app, in one install. Each part is its own import path: insightics/server, insightics/react, insightics/core and the rest. There is deliberately no root import, so browser code cannot pull in server code by accident.",
+  "keywords": [
+    "insightics",
+    "analytics",
+    "text-to-sql",
+    "postgres",
+    "llm",
+    "react",
+    "charts",
+    "dashboard"
+  ],
+  "homepage": "https://github.com/Abhxhek/insightkit-sdk/tree/main/packages/insightics#readme",
+  "bugs": {
+    "url": "https://github.com/Abhxhek/insightkit-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abhxhek/insightkit-sdk.git",
+    "directory": "packages/insightics"
+  },
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "bin": {
+    "ik": "./dist/bin.js"
+  },
+  "exports": {
+    "./server": {
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "default": "./dist/core.js"
+    },
+    "./core/pg": {
+      "types": "./dist/core-pg.d.ts",
+      "default": "./dist/core-pg.js"
+    },
+    "./sql-guard": {
+      "types": "./dist/sql-guard.d.ts",
+      "default": "./dist/sql-guard.js"
+    },
+    "./protocol": {
+      "types": "./dist/protocol.d.ts",
+      "default": "./dist/protocol.js"
+    },
+    "./llm": {
+      "types": "./dist/llm.d.ts",
+      "default": "./dist/llm.js"
+    },
+    "./llm/anthropic": {
+      "types": "./dist/llm-anthropic.d.ts",
+      "default": "./dist/llm-anthropic.js"
+    },
+    "./llm/openai": {
+      "types": "./dist/llm-openai.d.ts",
+      "default": "./dist/llm-openai.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "insightics-cli": "workspace:*",
+    "insightics-core": "workspace:*",
+    "insightics-llm": "workspace:*",
+    "insightics-protocol": "workspace:*",
+    "insightics-react": "workspace:*",
+    "insightics-server": "workspace:*",
+    "insightics-sql-guard": "workspace:*"
+  },
+  "peerDependencies": {
+    "@anthropic-ai/sdk": ">=0.124.0",
+    "openai": ">=7.0.0",
+    "pg": "^8.11.0",
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "@anthropic-ai/sdk": {
+      "optional": true
+    },
+    "openai": {
+      "optional": true
+    },
+    "pg": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  }
+}

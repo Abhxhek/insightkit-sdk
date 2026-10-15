@@ -6,7 +6,7 @@ Point it at your Postgres database, drop a component into your admin panel, and 
 
 > **Status: published as 1.0.1, and still unproven against a real database.**
 >
-> Seven packages are on npm and the suite is green. But **nothing in this project has ever run against a real Postgres or a real model.** Every test uses a recording fake. The evaluation corpus exists and has scored exactly zero cases, because scoring requires executing queries against real data.
+> It is on npm and the suite is green. But **nothing in this project has ever run against a real Postgres or a real model.** Every test uses a recording fake. The evaluation corpus exists and has scored exactly zero cases, because scoring requires executing queries against real data.
 >
 > So the engineering is production-shaped and the central product claim — that it answers *correctly* — is unmeasured. We would rather say that than let a test count imply otherwise.
 
@@ -49,22 +49,19 @@ A second guarantee runs beside the first: Insightics' own metadata writes use a 
 ## Quick start
 
 ```bash
-npm install insightics-server insightics-core insightics-sql-guard insightics-llm insightics-react pg @anthropic-ai/sdk
+npm install insightics pg @anthropic-ai/sdk
 ```
+
+`insightics` is one install with an import path per part — `insightics/server`, `insightics/react`, `insightics/core` and so on — and deliberately no root import, so browser code cannot pull in server code by accident. Each part is also published on its own as `insightics-<part>`.
 
 Server — one handler, mounted wherever you like:
 
 ```ts
-import {
-  createInsightics,
-  singleTenant,
-  SINGLE_TENANT_ACKNOWLEDGEMENT,
-  toNextRoute,
-} from 'insightics-server';
-import { asReaderSource, introspectSchema } from 'insightics-core';
-import { fromPgPool } from 'insightics-core/pg';
-import { anthropicProvider } from 'insightics-llm/anthropic';
-import { createGuard } from 'insightics-sql-guard';
+import { asReaderSource, introspectSchema } from 'insightics/core';
+import { fromPgPool } from 'insightics/core/pg';
+import { anthropicProvider } from 'insightics/llm/anthropic';
+import { createInsightics, SINGLE_TENANT_ACKNOWLEDGEMENT, singleTenant, toNextRoute } from 'insightics/server';
+import { createGuard } from 'insightics/sql-guard';
 import { Pool } from 'pg';
 
 const source = asReaderSource(
@@ -86,7 +83,8 @@ export const { GET, POST } = toNextRoute(ik.handler);
 Browser — one component:
 
 ```tsx
-import { Insight } from 'insightics-react';
+'use client';
+import { Insight } from 'insightics/react';
 
 <Insight endpoint="/api/insightics" question="how many users signed up this week, by signup method" live />
 ```
@@ -139,6 +137,7 @@ packages/
   server/       HTTP + SSE handlers (next / node / fastify / hono)
   react/        components and hooks - browser only
   cli/          ik init | doctor | introspect
+  insightics/   the umbrella - one install, a subpath per package, no root import
   eval/         release gate - corpus + scorer, never published
 ```
 
