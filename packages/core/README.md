@@ -17,21 +17,21 @@ It is also fenced in from both sides:
 ## Install
 
 ```bash
-npm install insightics
+npm install insightics-sdk
 
 # only if you want the node-postgres adapter
 npm install pg
 ```
 
-Not published on its own: it ships inside `insightics` and is imported from `insightics/core`. `pg` is an **optional** peer dependency (`^8.11.0`) and lives behind the `insightics/core/pg` subpath, so the main entry point never references a driver and core stays testable without one.
+Not published on its own: it ships inside `insightics-sdk` and is imported from `insightics-sdk/core`. `pg` is an **optional** peer dependency (`^8.11.0`) and lives behind the `insightics-sdk/core/pg` subpath, so the main entry point never references a driver and core stays testable without one.
 
 ## Usage
 
 ```ts
 import { Pool } from 'pg';
-import { createGuard } from 'insightics/sql-guard';
-import { approve, asReaderSource, runGuardedRead } from 'insightics/core';
-import { fromPgPool } from 'insightics/core/pg';
+import { createGuard } from 'insightics-sdk/sql-guard';
+import { approve, asReaderSource, runGuardedRead } from 'insightics-sdk/core';
+import { fromPgPool } from 'insightics-sdk/core/pg';
 
 // connectionTimeoutMillis is required — fromPgPool refuses a pool without one
 const pool = new Pool({ connectionString: process.env.IK_READER_URL, connectionTimeoutMillis: 5_000 });

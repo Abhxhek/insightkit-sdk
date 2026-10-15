@@ -1,7 +1,7 @@
 {
-  "name": "insightics",
+  "name": "insightics-sdk",
   "version": "1.0.1",
-  "description": "Prompt-driven, real-time analytics for a Node app, in one install. Each part is its own import path: insightics/server, insightics/react, insightics/core and the rest. There is deliberately no root import, so browser code cannot pull in server code by accident.",
+  "description": "Prompt-driven, real-time analytics for a Node app, in one install. Each part is its own import path: insightics-sdk/server, insightics-sdk/react, insightics-sdk/core and the rest. There is deliberately no root import, so browser code cannot pull in server code by accident.",
   "keywords": [
     "insightics",
     "analytics",

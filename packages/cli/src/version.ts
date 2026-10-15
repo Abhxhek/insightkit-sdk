@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 
 const FALLBACK = '0.0.0';
-const NAMES: ReadonlySet<string> = new Set(['insightics-cli', 'insightics']);
+const NAMES: ReadonlySet<string> = new Set(['insightics-cli', 'insightics-sdk']);
 
 // One level up from src/ and from this package's dist/; two levels up once the build has
-// packed this package into insightics as dist/cli/.
+// packed this package into insightics-sdk as dist/cli/.
 const CANDIDATES = ['../package.json', '../../package.json'];
 
 const read = (candidate: string): { name?: unknown; version?: unknown } | null => {

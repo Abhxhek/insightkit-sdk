@@ -49,19 +49,19 @@ A second guarantee runs beside the first: Insightics' own metadata writes use a 
 ## Quick start
 
 ```bash
-npm install insightics pg @anthropic-ai/sdk
+npm install insightics-sdk pg @anthropic-ai/sdk
 ```
 
-`insightics` is one install with an import path per part — `insightics/server`, `insightics/react`, `insightics/core` and so on — and deliberately no root import, so browser code cannot pull in server code by accident. Inside the repository the parts stay separate packages, which is where their boundaries are enforced; the build packs them into this one.
+`insightics-sdk` is one install with an import path per part — `insightics-sdk/server`, `insightics-sdk/react`, `insightics-sdk/core` and so on — and deliberately no root import, so browser code cannot pull in server code by accident. Inside the repository the parts stay separate packages, which is where their boundaries are enforced; the build packs them into this one.
 
 Server — one handler, mounted wherever you like:
 
 ```ts
-import { asReaderSource, introspectSchema } from 'insightics/core';
-import { fromPgPool } from 'insightics/core/pg';
-import { anthropicProvider } from 'insightics/llm/anthropic';
-import { createInsightics, SINGLE_TENANT_ACKNOWLEDGEMENT, singleTenant, toNextRoute } from 'insightics/server';
-import { createGuard } from 'insightics/sql-guard';
+import { asReaderSource, introspectSchema } from 'insightics-sdk/core';
+import { fromPgPool } from 'insightics-sdk/core/pg';
+import { anthropicProvider } from 'insightics-sdk/llm/anthropic';
+import { createInsightics, SINGLE_TENANT_ACKNOWLEDGEMENT, singleTenant, toNextRoute } from 'insightics-sdk/server';
+import { createGuard } from 'insightics-sdk/sql-guard';
 import { Pool } from 'pg';
 
 const source = asReaderSource(
@@ -84,7 +84,7 @@ Browser — one component:
 
 ```tsx
 'use client';
-import { Insight } from 'insightics/react';
+import { Insight } from 'insightics-sdk/react';
 
 <Insight endpoint="/api/insightics" question="how many users signed up this week, by signup method" live />
 ```
@@ -98,7 +98,7 @@ import { Insight } from 'insightics/react';
 The component that decides whether SQL is safe is a package that **cannot execute SQL, cannot open a socket, and cannot read the filesystem**. It takes a string and returns a verdict. Something else runs the query.
 
 ```ts
-import { createGuard } from 'insightics/sql-guard';
+import { createGuard } from 'insightics-sdk/sql-guard';
 
 const guard = await createGuard({ allowedSchemas: ['public'] });
 
