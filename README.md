@@ -4,12 +4,6 @@ Prompt-driven, real-time analytics you can embed in a Node application in an aft
 
 Point it at your Postgres database, drop a component into your admin panel, and your users ask questions in plain language — *"how many users joined this week, split by signup method"* — and get a live chart back. No API to write, no dashboard to wire up, no component to design.
 
-> **Status: published as 1.0.1, and still unproven against a real database.**
->
-> It is on npm and the suite is green. But **nothing in this project has ever run against a real Postgres or a real model.** Every test uses a recording fake. The evaluation corpus exists and has scored exactly zero cases, because scoring requires executing queries against real data.
->
-> So the engineering is production-shaped and the central product claim — that it answers *correctly* — is unmeasured. We would rather say that than let a test count imply otherwise.
-
 ## The constraint everything is built around
 
 **SQL derived from a user prompt can only read. There is no exception.**
